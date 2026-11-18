@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#090D16">
+  <title>BAL Tech Command Center — Trung Tâm Chỉ Huy Công Nghệ Bảo Anh Lâm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-canvas: #090D16;
+      --bg-surface: #111827;
+      --bg-surface-elevated: #172033;
+      --bg-input: #0B1120;
+      --brand-emerald: #1E5E3A;
+      --brand-gold: #FFD800;
+      --brand-gold-hover: #FFE44D;
+      --text-primary: #F8FAFC;
+      --text-secondary: #CBD5E1;
+      --text-muted: #94A3B8;
+      --status-success: #10B981;
+      --status-warning: #F59E0B;
+      --status-danger: #EF4444;
+      --border-hairline: #1E293B;
+      --border-focus: #FFD800;
+
+      --space-1: 0.25rem;
+      --space-2: 0.5rem;
+      --space-3: 0.75rem;
+      --space-4: 1rem;
+      --space-6: 1.5rem;
+
+      --radius-xl: 20px;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+      --radius-pill: 9999px;
+
+      --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
+      --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      min-height: 100%;
+      background: var(--bg-canvas);
+      color: var(--text-primary);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-size: 13px;
+      line-height: 1.52;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: 2px;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+
+    .mono-num {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-variant-numeric: tabular-nums;
+    }
+
+    button, select {
+      font: inherit;
+      cursor: pointer;
+      border: 1px solid transparent;
+      min-height: 44px;
+      border-radius: var(--radius-sm);
+      transition: transform 120ms var(--ease-out-expo), opacity 160ms var(--ease-drawer), background-color 160ms ease, border-color 160ms ease;
+    }
+
+    button:active { transform: scale(0.97); }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    /* PIN LOCK OVERLAY */
+    .lock-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-4);
+      background: var(--bg-canvas);
+      transition: opacity 220ms var(--ease-out-expo), transform 220ms var(--ease-out-expo);
+    }
+
+    .lock-screen.is-unlocked {
+      opacity: 0;
+      transform: translateY(-10px) scale(0.98);
+      pointer-events: none;
+    }
+
+    .lock-card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      border-top: 3px solid var(--brand-gold);
+      border-radius: var(--radius-xl);
+      padding: var(--space-6);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .lock-card.shake {
+      animation: bal-pin-shake 240ms var(--ease-out-expo);
+    }
+
+    @keyframes bal-pin-shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      45% { transform: translateX(6px); }
+      70% { transform: translateX(-4px); }
+      90% { transform: translateX(4px); }
+    }
+
+    .brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      align-self: flex-start;
+      background: var(--brand-emerald);
+      color: var(--brand-gold);
+      border: 1px solid var(--brand-gold);
+      border-radius: var(--radius-pill);
+      padding: 3px 10px;
+      font-size: 0.71875rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .lock-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(1.375rem, 2.2vw, 1.75rem);
+      line-height: 1.15;
+      letter-spacing: -0.025em;
+      text-wrap: balance;
+      font-weight: 800;
+    }
+
+    .lock-sub {
+      color: var(--text-secondary);
+      font-size: 0.8125rem;
+      max-width: 65ch;
+      text-wrap: pretty;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .pin-input {
+      width: 100%;
+      min-height: 44px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-md);
+      color: var(--brand-gold);
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+      font-size: 1.125rem;
+      letter-spacing: 0.32em;
+      text-align: center;
+      padding: 8px var(--space-3);
+    }
+
+    .btn-primary-gold {
+      background: var(--brand-gold);
+      color: var(--bg-canvas);
+      font-weight: 800;
+      font-size: 0.8125rem;
+      padding: 8px 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-primary-gold:hover { background: var(--brand-gold-hover); }
+
+    .btn-secondary {
+      background: var(--bg-surface-elevated);
+      color: var(--text-primary);
+      border: 1px solid var(--border-hairline);
+      font-weight: 600;
+      font-size: 0.75rem;
+      padding: 6px 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-secondary[aria-pressed="true"] {
+      background: var(--brand-emerald);
+      border-color: var(--brand-gold);
+      color: var(--brand-gold);
+    }
+
+    .alert-inline {
+      font-size: 0.8125rem;
+      color: var(--status-danger);
+      min-height: 1.1rem;
+    }
+
+    /* TOP COMMAND HEADER */
+    .cmd-shell {
+      display: flex;
+      flex-direction: column;
+      min-height: 100dvh;
+    }
+
+    .cmd-header {
+      min-height: 60px;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-hairline);
+      padding: var(--space-2) var(--space-3);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-2);
+      position: sticky;
+      top: 0;
+      z-index: 30;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      min-width: 0;
+    }
+
+    .header-brand h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(1rem, 1.35vw, 1.15rem);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+
+    .header-meta {
+      font-size: 0.71875rem;
+      color: var(--text-muted);
+    }
+
+    .header-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .search-input, .model-select {
+      min-height: 44px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      padding: 6px var(--space-3);
+      font-size: 0.75rem;
+      max-width: 100%;
+    }
+
+    .search-input { width: 175px; }
+    .model-select {
+      color: var(--brand-gold);
+      font-weight: 700;
+      border-color: rgba(255, 216, 0, 0.35);
+    }
+
+    /* MOBILE TAB BAR */
+    .mobile-tabs {
+      display: none;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-hairline);
+      padding: var(--space-2) var(--space-3);
+      gap: var(--space-2);
+    }
+
+    .mobile-tabs button { flex: 1; }
+
+    /* SPLIT-PANE GOLDEN RATIO 61.8% / 38.2% */
+    .split-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.618fr) minmax(350px, 1fr);
+      height: calc(100dvh - 60px);
+      overflow: hidden;
+    }
+
+    .radar-pane {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      height: 100%;
+      overflow-y: auto;
+      padding: var(--space-3);
+      gap: var(--space-3);
+      border-right: 1px solid var(--border-hairline);
+    }
+
+    /* EXECUTIVE KPI STRIP */
+    .kpi-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--space-2);
+    }
+
+    .kpi-tile {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-md);
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .kpi-label {
+      font-size: 0.6875rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .kpi-val {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--brand-gold);
+    }
+
+    .pane-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-2);
+    }
+
+    .filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .repo-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+
+    .repo-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-lg);
+      padding: var(--space-3);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: transform 180ms var(--ease-out-expo), border-color 180ms ease;
+    }
+
+    .repo-card.is-selected {
+      background: var(--bg-surface-elevated);
+      border-color: var(--brand-gold);
+    }
+
+    .repo-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-2);
+    }
+
+    .repo-title-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .repo-name {
+      font-size: 0.90625rem;
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+      font-weight: 700;
+      color: var(--text-primary);
+      word-break: break-word;
+    }
+
+    .repo-name a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .repo-name a:hover { color: var(--brand-gold); text-decoration: underline; }
+
+    .repo-badges {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+      font-size: 0.71875rem;
+      font-weight: 700;
+      background: var(--bg-input);
+      border: 1px solid var(--border-hairline);
+      color: var(--text-secondary);
+    }
+
+    .pill-rank {
+      background: var(--brand-emerald);
+      color: var(--brand-gold);
+      border-color: var(--brand-gold);
+    }
+
+    .pill-stars {
+      color: var(--brand-gold);
+      border-color: rgba(255, 216, 0, 0.35);
+    }
+
+    .pill-fit-high {
+      background: rgba(16, 185, 129, 0.14);
+      border-color: rgba(16, 185, 129, 0.5);
+      color: var(--status-success);
+    }
+
+    .pill-fit-mid {
+      background: rgba(245, 158, 11, 0.14);
+      border-color: rgba(245, 158, 11, 0.5);
+      color: var(--status-warning);
+    }
+
+    .pill-fit-low {
+      background: rgba(239, 68, 68, 0.14);
+      border-color: rgba(239, 68, 68, 0.45);
+      color: var(--status-danger);
+    }
+
+    .repo-summary {
+      font-size: 0.8125rem;
+      line-height: 1.52;
+      color: var(--text-secondary);
+      max-width: 68ch;
+      text-wrap: pretty;
+    }
+
+    /* EVALUATION MATRIX BOX (F&B & XE DICH VU) */
+    .eval-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      font-size: 0.71875rem;
+    }
+
+    .eval-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .eval-key {
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .eval-val {
+      color: var(--text-primary);
+      font-weight: 600;
+      word-break: break-word;
+    }
+
+    .eval-wide {
+      grid-column: 1 / -1;
+      border-top: 1px dashed var(--border-hairline);
+      padding-top: 5px;
+      color: var(--brand-gold);
+    }
+
+    .repo-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-2);
+      padding-top: 6px;
+      border-top: 1px solid var(--border-hairline);
+    }
+
+    .btn-group-inline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .json-block {
+      background: var(--bg-input);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-md);
+      padding: var(--space-2);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.71875rem;
+      line-height: 1.4;
+      color: var(--text-secondary);
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* RIGHT CHATBOX PANE */
+    .chat-pane {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: var(--bg-surface);
+      min-width: 0;
+    }
+
+    .chat-header {
+      padding: var(--space-2) var(--space-3);
+      border-bottom: 1px solid var(--border-hairline);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-2);
+    }
+
+    .chat-header h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(1rem, 1.35vw, 1.15rem);
+      line-height: 1.2;
+      font-weight: 700;
+    }
+
+    .context-chip {
+      margin: var(--space-2) var(--space-3) 0;
+      padding: 6px 10px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-md);
+      font-size: 0.71875rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-2);
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-3);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+
+    .msg {
+      padding: 8px 12px;
+      border-radius: var(--radius-lg);
+      max-width: 94%;
+      font-size: 0.8125rem;
+      line-height: 1.52;
+      white-space: pre-wrap;
+      word-break: break-word;
+      animation: bal-msg-in 200ms var(--ease-drawer);
+    }
+
+    @keyframes bal-msg-in {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg-user {
+      align-self: flex-end;
+      background: var(--brand-emerald);
+      color: var(--text-primary);
+      border: 1px solid rgba(255, 216, 0, 0.35);
+    }
+
+    .msg-ai {
+      align-self: flex-start;
+      background: var(--bg-surface-elevated);
+      color: var(--text-primary);
+      border: 1px solid var(--border-hairline);
+    }
+
+    .msg-meta {
+      font-size: 0.6875rem;
+      color: var(--brand-gold);
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+
+    .chat-form {
+      padding: var(--space-2) var(--space-3);
+      border-top: 1px solid var(--border-hairline);
+      display: flex;
+      gap: var(--space-2);
+      background: var(--bg-surface);
+    }
+
+    .chat-input {
+      flex: 1;
+      min-height: 44px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      padding: 6px 10px;
+      font-size: 0.8125rem;
+    }
+
+    /* NATIVE DIALOG FOR DEPLOY CONFIRMATION */
+    dialog.deploy-dialog {
+      margin: auto;
+      max-width: 500px;
+      width: calc(100% - 2rem);
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      border: 1px solid var(--brand-gold);
+      border-radius: var(--radius-xl);
+      padding: var(--space-4);
+    }
+
+    dialog.deploy-dialog::backdrop {
+      background: rgba(9, 13, 22, 0.82);
+    }
+
+    .dialog-body {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .dialog-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: var(--space-2);
+    }
+
+    .status-toast {
+      position: fixed;
+      bottom: var(--space-4);
+      left: var(--space-4);
+      z-index: 60;
+      max-width: min(440px, calc(100vw - 2rem));
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--status-success);
+      border-radius: var(--radius-md);
+      padding: 8px 12px;
+      color: var(--text-primary);
+      font-size: 0.8125rem;
+      display: none;
+    }
+
+    .status-toast.is-visible {
+      display: block;
+      animation: bal-msg-in 220ms var(--ease-out-expo);
+    }
+
+    @media (max-width: 1023px) {
+      .split-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+        overflow: visible;
+      }
+      .mobile-tabs { display: flex; }
+      .radar-pane {
+        border-right: none;
+        height: auto;
+        overflow: visible;
+      }
+      .chat-pane {
+        height: calc(100dvh - 130px);
+        min-height: 440px;
+      }
+      .pane-hidden-mobile { display: none; }
+      .search-input, .model-select { width: 100%; }
+      .kpi-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .eval-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- MAN HINH KHOA BAO MAT (DIRECTOR PIN GATE) -->
+  <div id="lockScreen" class="lock-screen" role="dialog" aria-modal="true" aria-labelledby="lockHeading">
+    <form id="lockForm" class="lock-card" autocomplete="off">
+      <span class="brand-pill">Bảo Anh Lâm • MST 3401289271</span>
+      <h2 id="lockHeading" class="lock-title">BAL Tech Command Center</h2>
+      <p class="lock-sub">
+        Khu vực tình báo công nghệ nội bộ. Vui lòng nhập Mã PIN Giám đốc để mở khóa Radar 30 Repo và AI Model Switcher.
+      </p>
+      <div class="field-group">
+        <label for="pinInput" class="field-label">Mã PIN Bảo mật Nội bộ</label>
+        <input id="pinInput" class="pin-input" type="password" inputmode="numeric" maxlength="16" placeholder="••••••" required autofocus>
+      </div>
+      <div id="pinError" class="alert-inline" role="alert"></div>
+      <button id="unlockBtn" type="submit" class="btn-primary-gold">🔓 Mở Khóa Trạm Chỉ Huy</button>
+    </form>
+  </div>
+
+  <!-- KHUNG TRUNG TAM CHI HUY CHIA 2 LUONG -->
+  <div id="commandShell" class="cmd-shell" hidden>
+    <header class="cmd-header">
+      <div class="header-brand">
+        <span class="brand-pill">BAL V6</span>
+        <div>
+          <h1>BAL Tech Command Center</h1>
+          <div id="radarTimestamp" class="header-meta mono-num">Đang tải dữ liệu GitHub Radar...</div>
+        </div>
+      </div>
+      <div class="header-controls">
+        <label for="headerModelSelect" class="sr-only">Chuyển đổi mô hình AI</label>
+        <select id="headerModelSelect" class="model-select" title="AI Model Switcher">
+          <option value="gemini-4-argon">🧠 Gemini 4 Argon (Kiến trúc &amp; POS)</option>
+          <option value="gemini-3.8-flash">⚡ Gemini 3.8 Flash (Phân tích nhanh)</option>
+          <option value="gemini-3.5-flash-lite">🪶 Gemini 3.5 Flash-Lite (RAM 8GB / -80% Token)</option>
+          <option value="claude-3-5-sonnet">🛡️ Claude 3.5 Sonnet (Fallback Code/UI)</option>
+        </select>
+        <label for="repoSearchInput" class="sr-only">Tìm kiếm repository</label>
+        <input id="repoSearchInput" class="search-input" type="search" placeholder="Tìm repo, F&B, Xe, TTS...">
+        <button id="toggleRawJsonBtn" type="button" class="btn-secondary" aria-pressed="false">{ } JSON</button>
+        <button id="lockSessionBtn" type="button" class="btn-secondary">🔒 Khóa</button>
+      </div>
+    </header>
+
+    <nav class="mobile-tabs" aria-label="Chuyển luồng màn hình">
+      <button id="mobTabRadar" type="button" class="btn-secondary" aria-pressed="true">📡 Radar (<span id="mobCnt">30</span>)</button>
+      <button id="mobTabChat" type="button" class="btn-secondary" aria-pressed="false">🤖 AI Chatbox</button>
+    </nav>
+
+    <main class="split-grid">
+      <!-- LUONG TRAI (61.8%): DANH SACH JSON & TIEU CHI DANH GIA F&B / XE DICH VU -->
+      <section id="radarPane" class="radar-pane" aria-label="Danh sách 30 Repo GitHub Radar">
+        <div class="kpi-strip">
+          <div class="kpi-tile">
+            <span class="kpi-label">Tổng Radar 24h</span>
+            <span id="kpiTotal" class="kpi-val mono-num">0</span>
+          </div>
+          <div class="kpi-tile">
+            <span class="kpi-label">Hợp F&amp;B / Xe (Fit ≥ 85)</span>
+            <span id="kpiFitHigh" class="kpi-val mono-num" style="color: var(--status-success);">0</span>
+          </div>
+          <div class="kpi-tile">
+            <span class="kpi-label">Siêu nhẹ RAM 8GB</span>
+            <span id="kpiLight" class="kpi-val mono-num" style="color: var(--status-success);">0</span>
+          </div>
+          <div class="kpi-tile">
+            <span class="kpi-label">AI Engine Đang Chạy</span>
+            <span id="kpiActiveModel" class="kpi-val mono-num" style="font-size: 0.78rem;">gemini-4-argon</span>
+          </div>
+        </div>
+
+        <div class="pane-toolbar">
+          <div class="filter-row">
+            <button type="button" class="btn-secondary filter-btn" data-filter="ALL" aria-pressed="true">Tất cả (<span class="mono-num" id="cntAll">0</span>)</button>
+            <button type="button" class="btn-secondary filter-btn" data-filter="FNB" aria-pressed="false">🍃 F&amp;B Hy Chay (<span class="mono-num" id="cntFnb">0</span>)</button>
+            <button type="button" class="btn-secondary filter-btn" data-filter="CAR" aria-pressed="false">🚘 Xe Dịch Vụ (<span class="mono-num" id="cntCar">0</span>)</button>
+            <button type="button" class="btn-secondary filter-btn" data-filter="LIGHT" aria-pressed="false">⚡ Nhẹ RAM 8GB</button>
+            <button type="button" class="btn-secondary filter-btn" data-filter="Python" aria-pressed="false">Python (<span class="mono-num" id="cntPy">0</span>)</button>
+            <button type="button" class="btn-secondary filter-btn" data-filter="TypeScript" aria-pressed="false">TS (<span class="mono-num" id="cntTs">0</span>)</button>
+          </div>
+          <span class="header-meta mono-num" id="visibleCountLabel">0 / 30 repos</span>
+        </div>
+
+        <pre id="rawJsonViewer" class="json-block" hidden></pre>
+        <div id="repoList" class="repo-list"></div>
+      </section>
+
+      <!-- LUONG PHAI (38.2%): CHATBOX GIAO TIEP TRUC TIEP VOI AI MODEL SWITCHER -->
+      <aside id="chatPane" class="chat-pane pane-hidden-mobile" aria-label="Khung Chat AI Model Switcher">
+        <div class="chat-header">
+          <div>
+            <h2>Cố vấn AI Công Nghệ</h2>
+            <div class="header-meta">Đánh giá tích hợp F&amp;B Hy Chay &amp; Đình Nhân Car</div>
+          </div>
+          <label for="chatModelSelect" class="sr-only">Chọn AI Model trong khung Chat</label>
+          <select id="chatModelSelect" class="model-select" style="min-height: 38px; padding: 4px 8px;">
+            <option value="gemini-4-argon">Gemini 4 Argon</option>
+            <option value="gemini-3.8-flash">Gemini 3.8 Flash</option>
+            <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash-Lite</option>
+            <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
+          </select>
+        </div>
+
+        <div class="context-chip">
+          <span id="selectedContextText" class="mono-num">Ngữ cảnh: Toàn bộ 30 repo</span>
+          <button id="clearContextBtn" type="button" class="btn-secondary" style="min-height: 34px; padding: 3px 8px;" hidden>Bỏ chọn</button>
+        </div>
+
+        <div id="chatMessages" class="chat-messages" aria-live="polite">
+          <div class="msg msg-ai">
+            <div class="msg-meta">AI Model Switcher • Ready</div>
+            Xin chào Giám đốc. Mỗi repository bên trái đã được chấm điểm tự động theo tiêu chí F&amp;B Hy Chay / Xe Du Lịch Đình Nhân và định mức RAM 8GB. Giám đốc có thể đổi mô hình AI ở góc trên và chọn bất kỳ repo nào để phân tích sâu hoặc bấm [⚡ Duyệt &amp; Triển Khai].
+          </div>
+        </div>
+
+        <form id="chatForm" class="chat-form">
+          <label for="chatInput" class="sr-only">Nhập câu hỏi cho AI</label>
+          <input id="chatInput" class="chat-input" type="text" placeholder="Hỏi AI về repo này hoặc cách tích hợp..." required>
+          <button id="chatSendBtn" type="submit" class="btn-primary-gold">Gửi</button>
+        </form>
+      </aside>
+    </main>
+  </div>
+
+  <!-- MODAL XAC NHAN LENH TRIEN KHAI WEBHOOK -->
+  <dialog id="deployDialog" class="deploy-dialog" aria-labelledby="deployDialogTitle">
+    <div class="dialog-body">
+      <span class="brand-pill">Xác nhận Lệnh Chỉ huy</span>
+      <h2 id="deployDialogTitle" class="lock-title" style="font-size: 1.2rem;">Kích hoạt Triển khai Tự động</h2>
+      <p id="deployDialogDesc" class="lock-sub"></p>
+      <div class="field-group">
+        <label for="targetRepoSelect" class="field-label">Kho lưu trữ Công ty Đích (GitHub Actions Webhook)</label>
+        <select id="targetRepoSelect" class="chat-input">
+          <option value="TrungHuynh100291/hy-chay">TrungHuynh100291/hy-chay (F&amp;B Hy Chay &amp; POS V39)</option>
+          <option value="TrungHuynh100291/dinhnhan-car-rental">TrungHuynh100291/dinhnhan-car-rental (Xe Du Lịch Đình Nhân)</option>
+          <option value="TrungHuynh100291/bal-tech-command-center">TrungHuynh100291/bal-tech-command-center (BAL Tech Command Center)</option>
+        </select>
+      </div>
+      <div class="dialog-actions">
+        <button id="cancelDeployBtn" type="button" class="btn-secondary">Hủy bỏ</button>
+        <button id="confirmDeployBtn" type="button" class="btn-primary-gold">⚡ Xác nhận &amp; Bắn Webhook</button>
+      </div>
+    </div>
+  </dialog>
+
+  <div id="statusToast" class="status-toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (function () {
+      const MODEL_KEY = "bal_cmd_active_model";
+      const state = {
+        radar: null,
+        repos: [],
+        activeFilter: "ALL",
+        searchQuery: "",
+        showRawJson: false,
+        selectedRepo: null,
+        pendingDeployRepo: null,
+        sendingChat: false,
+        activeModel: localStorage.getItem(MODEL_KEY) || "gemini-4-argon"
+      };
+
+      const el = {
+        lockScreen: document.getElementById("lockScreen"),
+        lockCard: document.querySelector(".lock-card"),
+        lockForm: document.getElementById("lockForm"),
+        pinInput: document.getElementById("pinInput"),
+        pinError: document.getElementById("pinError"),
+        unlockBtn: document.getElementById("unlockBtn"),
+        commandShell: document.getElementById("commandShell"),
+        radarTimestamp: document.getElementById("radarTimestamp"),
+        headerModelSelect: document.getElementById("headerModelSelect"),
+        chatModelSelect: document.getElementById("chatModelSelect"),
+        kpiTotal: document.getElementById("kpiTotal"),
+        kpiFitHigh: document.getElementById("kpiFitHigh"),
+        kpiLight: document.getElementById("kpiLight"),
+        kpiActiveModel: document.getElementById("kpiActiveModel"),
+        repoSearchInput: document.getElementById("repoSearchInput"),
+        toggleRawJsonBtn: document.getElementById("toggleRawJsonBtn"),
+        lockSessionBtn: document.getElementById("lockSessionBtn"),
+        rawJsonViewer: document.getElementById("rawJsonViewer"),
+        repoList: document.getElementById("repoList"),
+        cntAll: document.getElementById("cntAll"),
+        cntFnb: document.getElementById("cntFnb"),
+        cntCar: document.getElementById("cntCar"),
+        cntPy: document.getElementById("cntPy"),
+        cntTs: document.getElementById("cntTs"),
+        mobCnt: document.getElementById("mobCnt"),
+        visibleCountLabel: document.getElementById("visibleCountLabel"),
+        selectedContextText: document.getElementById("selectedContextText"),
+        clearContextBtn: document.getElementById("clearContextBtn"),
+        chatMessages: document.getElementById("chatMessages"),
+        chatForm: document.getElementById("chatForm"),
+        chatInput: document.getElementById("chatInput"),
+        chatSendBtn: document.getElementById("chatSendBtn"),
+        deployDialog: document.getElementById("deployDialog"),
+        deployDialogDesc: document.getElementById("deployDialogDesc"),
+        targetRepoSelect: document.getElementById("targetRepoSelect"),
+        cancelDeployBtn: document.getElementById("cancelDeployBtn"),
+        confirmDeployBtn: document.getElementById("confirmDeployBtn"),
+        statusToast: document.getElementById("statusToast"),
+        radarPane: document.getElementById("radarPane"),
+        chatPane: document.getElementById("chatPane"),
+        mobTabRadar: document.getElementById("mobTabRadar"),
+        mobTabChat: document.getElementById("mobTabChat")
+      };
+
+      function evaluateBalFit(repo) {
+        const blob = `${repo.full_name || ""} ${repo.description || ""} ${repo.summary_vi || ""}`.toLowerCase();
+        let score = 58;
+        let sector = "⚡ Hạ tầng AI Chung";
+        let isFnb = false;
+        let isCar = false;
+        let isLight = false;
+        let ram = "🟡 Trung bình (Worker/Edge)";
+        let actionNote = "Tham khảo kiến trúc mở rộng quy trình tự động hóa.";
+
+        if (/(appoint|booking|calendar|schedule|crm|chat|telegram|notify|radar)/.test(blob)) {
+          score = 92;
+          sector = "🚘 Xe Dịch Vụ & 🍃 Đặt Bàn";
+          isFnb = true;
+          isCar = true;
+          isLight = true;
+          ram = "🟢 Siêu nhẹ (Cloud / 0MB RAM)";
+          actionNote = "Tích hợp đặt lịch Chuyên cơ Carnival 300k, nhắc lịch 8h/15h & điều phối CSKH.";
+        } else if (/(marketing|seo|copy|email|ads|social|content)/.test(blob)) {
+          score = 94;
+          sector = "🍃 F&B Hy Chay & 🚘 Xe Car";
+          isFnb = true;
+          isCar = true;
+          isLight = true;
+          ram = "🟢 Siêu nhẹ (Skill / Prompt)";
+          actionNote = "Nạp vào quy trình SEO Fanpage Hy Chay, Đình Nhân Car & seeding tự nhiên.";
+        } else if (/(tts|voice|speech|audio|voca)/.test(blob)) {
+          score = 90;
+          sector = "🍃 POS Hy Chay & 🚘 Điều Hành";
+          isFnb = true;
+          isCar = true;
+          isLight = true;
+          ram = "🟢 Siêu nhẹ (CPU 8GB / Browser)";
+          actionNote = "Đọc loa báo đơn POS 280 Trần Hưng Đạo & thông báo chuyến xe cho tài xế.";
+        } else if (/(video|clip|edit|drama|shot|canvas|typeface|font|ui)/.test(blob)) {
+          score = 88;
+          sector = "🍃 Media Hy Chay & 🚘 TVC Xe";
+          isFnb = true;
+          isCar = true;
+          ram = "🟡 Render Colab / Browser GPU";
+          actionNote = "Dựng Reels món Chả Mít Non/Ruốc Nấm 9:16 & chuẩn hóa giao diện Website.";
+        } else if (/(payment|invoice|tax|nfse|checkout|qr)/.test(blob)) {
+          score = 86;
+          sector = "🍃 Thuế HTKK & 🚘 Cọc VietQR";
+          isFnb = true;
+          isCar = true;
+          isLight = true;
+          ram = "🟢 Siêu nhẹ (Serverless Webhook)";
+          actionNote = "Tối ưu kết xuất hóa đơn điện tử tách shippingFee & đối soát cọc xe 30%.";
+        } else if (/(orchestra|agent|edge|cloudflare|serverless|worker)/.test(blob)) {
+          score = 84;
+          sector = "⚡ Điều Phối Agent BAL V6";
+          isFnb = true;
+          isLight = true;
+          ram = "🟢 Siêu nhẹ (Cloud Edge)";
+          actionNote = "Đẩy tác vụ nặng lên Cloud Worker để máy 8GB RAM luôn vận hành mượt mà.";
+        } else if (/(trading|miner|dma|game|pokemon|crypto)/.test(blob)) {
+          score = 22;
+          sector = "⚠️ Ngoài Ngành F&B / Xe";
+          ram = "🔴 Không phù hợp";
+          actionNote = "Không tích hợp vào POS V39 hay luồng đặt xe nhằm bảo toàn an ninh hệ thống.";
+        }
+
+        return { score, sector, isFnb, isCar, isLight, ram, actionNote };
+      }
+
+      function syncModelSelection(modelId, announce) {
+        state.activeModel = modelId;
+        localStorage.setItem(MODEL_KEY, modelId);
+        el.headerModelSelect.value = modelId;
+        el.chatModelSelect.value = modelId;
+        el.kpiActiveModel.textContent = modelId;
+        if (announce) {
+          showToast(`Đã chuyển AI Model Switcher sang: ${modelId}`);
+        }
+      }
+
+      function showToast(message) {
+        el.statusToast.textContent = message;
+        el.statusToast.classList.add("is-visible");
+        setTimeout(() => el.statusToast.classList.remove("is-visible"), 4500);
+      }
+
+      async function checkSessionOnLoad() {
+        syncModelSelection(state.activeModel, false);
+        try {
+          const resp = await fetch("/api/auth", { method: "GET" });
+          if (resp.ok) {
+            const data = await resp.json();
+            if (data.authenticated) {
+              unlockUI();
+            }
+          }
+        } catch (err) {
+          console.warn("Auth session probe:", err);
+        }
+      }
+
+      function unlockUI() {
+        el.lockScreen.classList.add("is-unlocked");
+        el.commandShell.hidden = false;
+        setTimeout(() => { el.lockScreen.hidden = true; }, 240);
+        if (!state.radar) {
+          loadRadarData();
+        }
+      }
+
+      async function handlePinSubmit(ev) {
+        ev.preventDefault();
+        const pin = el.pinInput.value.trim();
+        el.pinError.textContent = "";
+        el.unlockBtn.disabled = true;
+
+        try {
+          const resp = await fetch("/api/auth", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ pin })
+          });
+          const data = await resp.json();
+          if (resp.ok && data.authenticated) {
+            el.pinInput.value = "";
+            unlockUI();
+          } else {
+            triggerPinError(data.error || "Mã PIN không hợp lệ.");
+          }
+        } catch (err) {
+          triggerPinError("Lỗi kết nối máy chủ xác thực: " + err.message);
+        } finally {
+          el.unlockBtn.disabled = false;
+        }
+      }
+
+      function triggerPinError(msg) {
+        el.pinError.textContent = msg;
+        el.lockCard.classList.remove("shake");
+        void el.lockCard.offsetWidth;
+        el.lockCard.classList.add("shake");
+        el.pinInput.select();
+      }
+
+      async function handleLockSession() {
+        await fetch("/api/auth", { method: "DELETE" }).catch(() => {});
+        el.lockScreen.hidden = false;
+        el.lockScreen.classList.remove("is-unlocked");
+        el.commandShell.hidden = true;
+        el.pinInput.focus();
+      }
+
+      async function loadRadarData() {
+        try {
+          const resp = await fetch("/data/tech_radar_latest.json", { cache: "no-store" });
+          const data = await resp.json();
+          state.radar = data;
+          const rawRepos = Array.isArray(data.repositories) ? data.repositories : [];
+          state.repos = rawRepos.map((r) => ({ ...r, _eval: evaluateBalFit(r) }));
+
+          const ts = data.generated_at_utc ? new Date(data.generated_at_utc).toLocaleString("vi-VN") : "Chưa rõ";
+          el.radarTimestamp.textContent = `Cập nhật: ${ts} • ${state.repos.length} repo Trending`;
+
+          el.kpiTotal.textContent = state.repos.length;
+          el.kpiFitHigh.textContent = state.repos.filter((r) => r._eval.score >= 85).length;
+          el.kpiLight.textContent = state.repos.filter((r) => r._eval.isLight).length;
+          el.mobCnt.textContent = state.repos.length;
+
+          el.cntAll.textContent = state.repos.length;
+          el.cntFnb.textContent = state.repos.filter((r) => r._eval.isFnb).length;
+          el.cntCar.textContent = state.repos.filter((r) => r._eval.isCar).length;
+          el.cntPy.textContent = state.repos.filter((r) => r.language === "Python").length;
+          el.cntTs.textContent = state.repos.filter((r) => r.language === "TypeScript").length;
+
+          el.rawJsonViewer.textContent = JSON.stringify(data, null, 2);
+          renderRepos();
+        } catch (err) {
+          el.radarTimestamp.textContent = "Không tải được tech_radar_latest.json: " + err.message;
+        }
+      }
+
+      function createEvalCell(labelText, valueText, isWide) {
+        const cell = document.createElement("div");
+        cell.className = "eval-cell" + (isWide ? " eval-wide" : "");
+        const k = document.createElement("span");
+        k.className = "eval-key";
+        k.textContent = labelText;
+        const v = document.createElement("span");
+        v.className = "eval-val";
+        v.textContent = valueText;
+        cell.append(k, v);
+        return cell;
+      }
+
+      function renderRepos() {
+        const q = state.searchQuery.toLowerCase();
+        const filtered = state.repos.filter((repo) => {
+          const ev = repo._eval;
+          if (state.activeFilter === "Python" && repo.language !== "Python") return false;
+          if (state.activeFilter === "TypeScript" && repo.language !== "TypeScript") return false;
+          if (state.activeFilter === "FNB" && !ev.isFnb) return false;
+          if (state.activeFilter === "CAR" && !ev.isCar) return false;
+          if (state.activeFilter === "LIGHT" && !ev.isLight) return false;
+          if (!q) return true;
+          const hay = `${repo.full_name} ${repo.description} ${repo.summary_vi} ${ev.sector} ${ev.actionNote}`.toLowerCase();
+          return hay.includes(q);
+        });
+
+        el.visibleCountLabel.textContent = `${filtered.length} / ${state.repos.length} repos`;
+        el.repoList.innerHTML = "";
+
+        filtered.forEach((repo) => {
+          const ev = repo._eval;
+          const card = document.createElement("article");
+          card.className = "repo-card" + (state.selectedRepo?.full_name === repo.full_name ? " is-selected" : "");
+
+          const top = document.createElement("div");
+          top.className = "repo-top";
+
+          const titleWrap = document.createElement("div");
+          titleWrap.className = "repo-title-wrap";
+          const h3 = document.createElement("h3");
+          h3.className = "repo-name";
+          const link = document.createElement("a");
+          link.href = repo.url || `https://github.com/${repo.full_name}`;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.textContent = repo.full_name;
+          h3.appendChild(link);
+          titleWrap.appendChild(h3);
+
+          const badges = document.createElement("div");
+          badges.className = "repo-badges";
+
+          const rankPill = document.createElement("span");
+          rankPill.className = "pill pill-rank mono-num";
+          rankPill.textContent = `#${repo.rank}`;
+
+          const fitPill = document.createElement("span");
+          fitPill.className = "pill mono-num " + (ev.score >= 85 ? "pill-fit-high" : (ev.score >= 55 ? "pill-fit-mid" : "pill-fit-low"));
+          fitPill.textContent = `Fit ${ev.score}/100`;
+
+          const langPill = document.createElement("span");
+          langPill.className = "pill";
+          langPill.textContent = repo.language || "Code";
+
+          const starPill = document.createElement("span");
+          starPill.className = "pill pill-stars mono-num";
+          starPill.textContent = `★ ${Number(repo.stars || 0).toLocaleString()}`;
+
+          badges.append(rankPill, fitPill, langPill, starPill);
+          top.append(titleWrap, badges);
+
+          const summary = document.createElement("p");
+          summary.className = "repo-summary";
+          summary.textContent = repo.summary_vi || repo.description || "Chưa có mô tả.";
+
+          // Evaluation Criteria Matrix for F&B / Xe Dich Vu & RAM 8GB
+          const evalBox = document.createElement("div");
+          evalBox.className = "eval-grid";
+          evalBox.append(
+            createEvalCell("Ngành Ứng Dụng", ev.sector, false),
+            createEvalCell("Định Mức RAM 8GB", ev.ram, false),
+            createEvalCell("Điểm Tương Thích", `${ev.score}/100 điểm`, false),
+            createEvalCell("Khuyến Nghị Tích Hợp (Hy Chay / Đình Nhân Car)", ev.actionNote, true)
+          );
+
+          const jsonPre = document.createElement("pre");
+          jsonPre.className = "json-block";
+          jsonPre.hidden = true;
+          jsonPre.textContent = JSON.stringify(repo, null, 2);
+
+          const actions = document.createElement("div");
+          actions.className = "repo-actions";
+
+          const leftBtns = document.createElement("div");
+          leftBtns.className = "btn-group-inline";
+
+          const askBtn = document.createElement("button");
+          askBtn.type = "button";
+          askBtn.className = "btn-secondary";
+          askBtn.textContent = "🤖 Hỏi AI";
+          askBtn.addEventListener("click", () => {
+            selectRepoForChat(repo);
+            switchMobileTab("chat");
+          });
+
+          const jsonBtn = document.createElement("button");
+          jsonBtn.type = "button";
+          jsonBtn.className = "btn-secondary";
+          jsonBtn.textContent = "{ } JSON";
+          jsonBtn.addEventListener("click", () => {
+            jsonPre.hidden = !jsonPre.hidden;
+            jsonBtn.setAttribute("aria-pressed", String(!jsonPre.hidden));
+          });
+
+          leftBtns.append(askBtn, jsonBtn);
+
+          const deployBtn = document.createElement("button");
+          deployBtn.type = "button";
+          deployBtn.className = "btn-primary-gold";
+          deployBtn.textContent = "⚡ Duyệt & Triển Khai";
+          deployBtn.addEventListener("click", () => openDeployModal(repo));
+
+          actions.append(leftBtns, deployBtn);
+          card.append(top, summary, evalBox, jsonPre, actions);
+          el.repoList.appendChild(card);
+        });
+      }
+
+      function selectRepoForChat(repo) {
+        state.selectedRepo = repo;
+        if (repo) {
+          el.selectedContextText.textContent = `Đang chọn: ${repo.full_name} (Fit ${repo._eval.score}/100)`;
+          el.clearContextBtn.hidden = false;
+          el.chatInput.focus();
+        } else {
+          el.selectedContextText.textContent = `Ngữ cảnh: Toàn bộ ${state.repos.length} repo`;
+          el.clearContextBtn.hidden = true;
+        }
+        renderRepos();
+      }
+
+      function appendChatMessage(role, label, text) {
+        const box = document.createElement("div");
+        box.className = role === "user" ? "msg msg-user" : "msg msg-ai";
+        const meta = document.createElement("div");
+        meta.className = "msg-meta";
+        meta.textContent = label;
+        const body = document.createElement("div");
+        body.textContent = text;
+        box.append(meta, body);
+        el.chatMessages.appendChild(box);
+        el.chatMessages.scrollTop = el.chatMessages.scrollHeight;
+      }
+
+      async function handleChatSubmit(ev) {
+        ev.preventDefault();
+        if (state.sendingChat) return;
+        const text = el.chatInput.value.trim();
+        if (!text) return;
+
+        appendChatMessage("user", `Giám đốc (${state.activeModel})`, text);
+        el.chatInput.value = "";
+        state.sendingChat = true;
+        el.chatSendBtn.disabled = true;
+
+        try {
+          const resp = await fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              message: text,
+              selectedRepo: state.selectedRepo?.full_name || "",
+              model: state.activeModel
+            })
+          });
+          const data = await resp.json();
+          if (resp.ok) {
+            appendChatMessage("ai", data.model || state.activeModel, data.reply);
+          } else {
+            appendChatMessage("ai", "Cảnh báo API", data.error || "Không nhận được phản hồi từ AI.");
+          }
+        } catch (err) {
+          appendChatMessage("ai", "Lỗi kết nối", err.message);
+        } finally {
+          state.sendingChat = false;
+          el.chatSendBtn.disabled = false;
+        }
+      }
+
+      function openDeployModal(repo) {
+        state.pendingDeployRepo = repo;
+        el.deployDialogDesc.textContent =
+          `Kích hoạt Webhook GitHub Actions cho "${repo.full_name}" (BAL Fit ${repo._eval.score}/100 — ${repo._eval.sector}) để Antigravity tự động tải mã nguồn, tạo cấu hình môi trường và push lên kho lưu trữ công ty.`;
+        if (repo._eval.isCar && !repo._eval.isFnb) {
+          el.targetRepoSelect.value = "TrungHuynh100291/dinhnhan-car-rental";
+        }
+        el.deployDialog.showModal();
+      }
+
+      async function confirmDeployWebhook() {
+        const repo = state.pendingDeployRepo;
+        if (!repo) return;
+        el.confirmDeployBtn.disabled = true;
+
+        try {
+          const resp = await fetch("/api/deploy", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              full_name: repo.full_name,
+              url: repo.url,
+              language: repo.language,
+              target_repo: el.targetRepoSelect.value
+            })
+          });
+          const data = await resp.json();
+          el.deployDialog.close();
+          if (resp.ok) {
+            showToast(data.message || `Đã kích hoạt lệnh triển khai ${repo.full_name}`);
+            appendChatMessage(
+              "ai",
+              `Lệnh Triển Khai (${data.mode || "WEBHOOK"})`,
+              `${data.message}\nEndpoint: ${data.webhookUrl}`
+            );
+          } else {
+            showToast("Lỗi Webhook: " + (data.error || resp.status));
+          }
+        } catch (err) {
+          el.deployDialog.close();
+          showToast("Lỗi kích hoạt Deploy: " + err.message);
+        } finally {
+          el.confirmDeployBtn.disabled = false;
+        }
+      }
+
+      function switchMobileTab(tab) {
+        const showRadar = tab === "radar";
+        el.radarPane.classList.toggle("pane-hidden-mobile", !showRadar);
+        el.chatPane.classList.toggle("pane-hidden-mobile", showRadar);
+        el.mobTabRadar.setAttribute("aria-pressed", String(showRadar));
+        el.mobTabChat.setAttribute("aria-pressed", String(!showRadar));
+      }
+
+      el.lockForm.addEventListener("submit", handlePinSubmit);
+      el.lockSessionBtn.addEventListener("click", handleLockSession);
+      el.chatForm.addEventListener("submit", handleChatSubmit);
+      el.cancelDeployBtn.addEventListener("click", () => el.deployDialog.close());
+      el.confirmDeployBtn.addEventListener("click", confirmDeployWebhook);
+      el.clearContextBtn.addEventListener("click", () => selectRepoForChat(null));
+
+      el.headerModelSelect.addEventListener("change", (e) => syncModelSelection(e.target.value, true));
+      el.chatModelSelect.addEventListener("change", (e) => syncModelSelection(e.target.value, true));
+
+      el.repoSearchInput.addEventListener("input", (e) => {
+        state.searchQuery = e.target.value;
+        renderRepos();
+      });
+
+      el.toggleRawJsonBtn.addEventListener("click", () => {
+        state.showRawJson = !state.showRawJson;
+        el.rawJsonViewer.hidden = !state.showRawJson;
+        el.toggleRawJsonBtn.setAttribute("aria-pressed", String(state.showRawJson));
+      });
+
+      document.querySelectorAll(".filter-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          state.activeFilter = btn.dataset.filter;
+          document.querySelectorAll(".filter-btn").forEach((b) => {
+            b.setAttribute("aria-pressed", String(b === btn));
+          });
+          renderRepos();
+        });
+      });
+
+      el.mobTabRadar.addEventListener("click", () => switchMobileTab("radar"));
+      el.mobTabChat.addEventListener("click", () => switchMobileTab("chat"));
+
+      checkSessionOnLoad();
+    })();
+  </script>
+</body>
+</html>
