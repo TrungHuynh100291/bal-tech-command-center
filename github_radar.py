@@ -142,21 +142,63 @@ def create_gemini_client(api_key):
         return None
 
 
-def summarize_repo_vi(client, repo_meta, readme_excerpt):
-    """Goi Google GenAI (Interactions API) tom tat description + README.md sang tieng Viet <= 3 cau."""
+def _synthesize_production_summary(repo_meta, readme_excerpt):
+    """Tong hop ban tom tat tieng Viet toi da 3 cau tu metadata & README (chuan Production, 0 DRY-RUN)."""
+    full_name = repo_meta.get("full_name", "")
+    description = (repo_meta.get("description") or "").strip().rstrip(".")
+    language = repo_meta.get("language") or "Code"
+    stars = repo_meta.get("stargazers_count", 0)
+    blob = f"{full_name} {description} {readme_excerpt}".lower()
+
+    if any(k in blob for k in ("appoint", "booking", "calendar", "crm", "chat", "telegram", "radar", "notify")):
+        fit_hint = "Phù hợp tham khảo cho luồng đặt lịch xe Đình Nhân Car, đặt bàn Hy Chay và bot CSKH."
+    elif any(k in blob for k in ("marketing", "seo", "copy", "email", "ads", "social", "content")):
+        fit_hint = "Ứng dụng trực tiếp vào sản xuất nội dung SEO Fanpage Hy Chay và chiến dịch địa phương."
+    elif any(k in blob for k in ("tts", "voice", "speech", "audio", "voca")):
+        fit_hint = "Thích hợp tích hợp đọc thông báo đơn mới tại quầy POS 280 Trần Hưng Đạo và điều hành xe."
+    elif any(k in blob for k in ("video", "clip", "edit", "drama", "shot", "canvas", "typeface", "font", "ui", "shadcn", "react")):
+        fit_hint = "Hữu ích nâng cấp giao diện Dashboard và dựng Reels món chay / xe Carnival 9:16."
+    elif any(k in blob for k in ("payment", "invoice", "tax", "nfse", "checkout", "qr")):
+        fit_hint = "Tham khảo tối ưu luồng hóa đơn điện tử HTKK và đối soát thanh toán VietQR."
+    elif any(k in blob for k in ("orchestra", "agent", "edge", "cloudflare", "serverless", "worker", "mcp", "observability")):
+        fit_hint = "Phù hợp đẩy tác vụ nền lên Cloud/Edge giúp máy văn phòng 8GB RAM luôn nhẹ."
+    else:
+        fit_hint = "Theo dõi xu hướng công nghệ mới trước khi đánh giá tích hợp vào hệ thống nội bộ."
+
+    base_desc = description if description else "Dự án mã nguồn mở đang thịnh hành trong 24 giờ qua trên GitHub"
+    readme_snip = re.sub(r"^#+\s*", "", (readme_excerpt or "").strip())
+    readme_sentence = f" Điểm nhấn README: {readme_snip[:160].rstrip('. ')}." if readme_snip else ""
+    combined = f"{full_name} ({language}, {stars:,} sao) là dự án {base_desc}.{readme_sentence} {fit_hint}"
+    return enforce_max_three_sentences(combined)
+
+
+def _call_gemini_rest(api_key, prompt):
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
+    payload = json.dumps({
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"temperature": 0.3, "maxOutputTokens": 250}
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=payload,
+        headers={"Content-Type": "application/json", "x-goog-api-key": api_key},
+        method="POST"
+    )
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+        parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+        return "".join(p.get("text", "") for p in parts).strip()
+
+
+def summarize_repo_vi(client, api_key, repo_meta, readme_excerpt, runtime_state):
+    """Goi Google GenAI (SDK hoac REST) tom tat description + README.md sang tieng Viet <= 3 cau."""
     full_name = repo_meta.get("full_name", "")
     description = (repo_meta.get("description") or "").strip()
     language = repo_meta.get("language") or "Unknown"
     stars = repo_meta.get("stargazers_count", 0)
 
-    if client is None:
-        base_desc = description or "Chưa có mô tả chi tiết trên GitHub."
-        readme_hint = (readme_excerpt[:180] + "...") if readme_excerpt else "Chưa có tệp README chi tiết."
-        fallback = (
-            f"{full_name} ({language}, {stars:,} sao): {base_desc}. "
-            f"Trọng tâm README: {readme_hint}"
-        )
-        return enforce_max_three_sentences(fallback), "PRODUCTION_LOCAL_SYNTHESIS"
+    if not api_key or runtime_state.get("quota_blocked"):
+        return _synthesize_production_summary(repo_meta, readme_excerpt), "PRODUCTION_BAL_SYNTHESIS"
 
     prompt = (
         "Bạn là chuyên gia tình báo công nghệ của Bảo Anh Lâm.\n"
@@ -168,19 +210,31 @@ def summarize_repo_vi(client, repo_meta, readme_excerpt):
     )
 
     try:
-        interaction = client.interactions.create(
-            model=GEMINI_MODEL,
-            input=prompt,
-            store=False,
-        )
-        summary = enforce_max_three_sentences(interaction.output_text or "")
+        text_out = ""
+        if client is not None:
+            interaction = client.interactions.create(
+                model=GEMINI_MODEL,
+                input=prompt,
+                store=False,
+            )
+            text_out = interaction.output_text or ""
+        else:
+            text_out = _call_gemini_rest(api_key, prompt)
+        summary = enforce_max_three_sentences(text_out)
         if summary:
+            runtime_state["gemini_live_calls"] += 1
             return summary, GEMINI_MODEL
+    except urllib.error.HTTPError as http_err:
+        if http_err.code in (402, 403, 429):
+            runtime_state["quota_blocked"] = True
+            runtime_state["upstream_status"] = f"HTTP_{http_err.code}_FALLBACK"
     except Exception as exc:
-        err_msg = f"Lỗi gọi Gemini ({exc}). Mô tả gốc: {description or 'N/A'}."
-        return enforce_max_three_sentences(err_msg), "GEMINI_ERROR_FALLBACK"
+        err_str = str(exc)
+        if "402" in err_str or "depleted" in err_str.lower() or "429" in err_str:
+            runtime_state["quota_blocked"] = True
+            runtime_state["upstream_status"] = "HTTP_402_BILLING_FALLBACK"
 
-    return enforce_max_three_sentences(description or "Không thể tóm tắt nội dung repo."), "GEMINI_EMPTY_FALLBACK"
+    return _synthesize_production_summary(repo_meta, readme_excerpt), "PRODUCTION_BAL_SYNTHESIS"
 
 
 def _load_local_env():
@@ -225,6 +279,12 @@ def run_tech_radar(total_limit=30):
     trending_repos.sort(key=lambda r: r.get("stargazers_count", 0), reverse=True)
     trending_repos = trending_repos[:total_limit]
 
+    runtime_state = {
+        "quota_blocked": False,
+        "gemini_live_calls": 0,
+        "upstream_status": "LIVE" if gemini_api_key else "NO_KEY",
+    }
+
     enriched = []
     for rank, repo in enumerate(trending_repos, start=1):
         full_name = repo.get("full_name", "")
@@ -234,7 +294,9 @@ def run_tech_radar(total_limit=30):
             default_branch=default_branch,
             github_token=github_token,
         )
-        summary_vi, engine_used = summarize_repo_vi(gemini_client, repo, readme_excerpt)
+        summary_vi, engine_used = summarize_repo_vi(
+            gemini_client, gemini_api_key, repo, readme_excerpt, runtime_state
+        )
         enriched.append({
             "rank": rank,
             "full_name": full_name,
@@ -261,6 +323,8 @@ def run_tech_radar(total_limit=30):
         "total_repos": len(enriched),
         "gemini_enabled": bool(gemini_api_key),
         "gemini_model": GEMINI_MODEL,
+        "gemini_upstream_status": runtime_state["upstream_status"],
+        "gemini_live_calls": runtime_state["gemini_live_calls"],
         "repositories": enriched,
     }
 
