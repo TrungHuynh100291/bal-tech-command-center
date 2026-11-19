@@ -2,7 +2,7 @@
   "project": "BAL TechRadar — Trạm Tình Báo Công Nghệ Bảo Anh Lâm",
   "status": "API_ERROR",
   "dry_run": false,
-  "generated_at_utc": "2026-11-19T06:12:11.730056+00:00",
+  "generated_at_utc": "2026-11-19T06:19:44.546156+00:00",
   "languages": [
     "Python",
     "TypeScript"
@@ -11,7 +11,7 @@
   "total_repos": 30,
   "translated_count": 0,
   "gemini_enabled": true,
-  "gemini_model": "gemini-2.5-flash",
+  "gemini_model": "gemini-2.5-flash-lite",
   "available_flash_models": [
     "gemini-2.5-flash",
     "gemini-2.5-flash-preview-tts",
@@ -39,8 +39,8 @@
   ],
   "batch_size": 6,
   "gemini_live_calls": 1,
-  "gemini_upstream_status": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay.",
-  "gemini_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay.",
+  "gemini_upstream_status": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay.",
+  "gemini_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay.",
   "repositories": [
     {
       "rank": 1,
@@ -59,15 +59,15 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 2,
       "full_name": "Immortal-Protocols/lastbook",
       "url": "https://github.com/Immortal-Protocols/lastbook",
       "language": "Python",
-      "stars": 2210,
-      "forks": 289,
+      "stars": 2212,
+      "forks": 290,
       "pushed_at": "2026-11-19T00:46:44Z",
       "created_at": "2026-11-12T23:49:03Z",
       "description": "Offline knowledge AI, maps and videos for survival and rebuilding",
@@ -78,14 +78,14 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 3,
       "full_name": "ZiChuanLan/freebie-radar",
       "url": "https://github.com/ZiChuanLan/freebie-radar",
       "language": "TypeScript",
-      "stars": 1665,
+      "stars": 1668,
       "forks": 274,
       "pushed_at": "2026-11-19T02:52:32Z",
       "created_at": "2026-11-12T09:08:11Z",
@@ -97,14 +97,14 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 4,
       "full_name": "joshpuckett/allo",
       "url": "https://github.com/joshpuckett/allo",
       "language": "Python",
-      "stars": 1062,
+      "stars": 1064,
       "forks": 28,
       "pushed_at": "2026-11-18T07:19:43Z",
       "created_at": "2026-11-15T17:33:42Z",
@@ -116,7 +116,7 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 5,
@@ -135,7 +135,7 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 6,
@@ -154,7 +154,7 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 7,
@@ -173,7 +173,7 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 8,
@@ -192,7 +192,7 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 9,
@@ -211,7 +211,7 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 10,
@@ -230,7 +230,7 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 11,
@@ -249,7 +249,7 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 12,
@@ -268,7 +268,7 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 13,
@@ -277,7 +277,7 @@
       "language": "TypeScript",
       "stars": 364,
       "forks": 44,
-      "pushed_at": "2026-11-19T05:28:20Z",
+      "pushed_at": "2026-11-19T06:15:54Z",
       "created_at": "2026-11-13T17:02:31Z",
       "description": "Scarlet is an AI video editor for macOS and Windows.",
       "readme_loaded": true,
@@ -287,7 +287,7 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 14,
@@ -306,7 +306,7 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 15,
@@ -325,14 +325,14 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 16,
       "full_name": "replit/datacat",
       "url": "https://github.com/replit/datacat",
       "language": "TypeScript",
-      "stars": 220,
+      "stars": 222,
       "forks": 21,
       "pushed_at": "2026-11-18T20:42:26Z",
       "created_at": "2026-11-17T02:51:06Z",
@@ -344,7 +344,7 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 17,
@@ -353,7 +353,7 @@
       "language": "Python",
       "stars": 217,
       "forks": 11,
-      "pushed_at": "2026-11-19T06:06:54Z",
+      "pushed_at": "2026-11-19T06:18:11Z",
       "created_at": "2026-11-15T07:28:14Z",
       "description": "A tiny system one model for code readability and hygiene.",
       "readme_loaded": true,
@@ -363,7 +363,7 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 18,
@@ -382,7 +382,7 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 19,
@@ -401,15 +401,15 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 20,
       "full_name": "sfewer-r7/CVE-2026-123007",
       "url": "https://github.com/sfewer-r7/CVE-2026-123007",
       "language": "Python",
-      "stars": 171,
-      "forks": 77,
+      "stars": 173,
+      "forks": 78,
       "pushed_at": "2026-11-18T15:23:27Z",
       "created_at": "2026-11-18T11:16:51Z",
       "description": "Proof-of-concept (PoC) scripts for CVE-2026-123007, an integer underflow in NGINX HTTP/2.",
@@ -420,14 +420,14 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 21,
       "full_name": "joeseesun/subcast",
       "url": "https://github.com/joeseesun/subcast",
       "language": "TypeScript",
-      "stars": 168,
+      "stars": 169,
       "forks": 24,
       "pushed_at": "2026-11-19T05:36:09Z",
       "created_at": "2026-11-16T11:22:42Z",
@@ -439,7 +439,7 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 22,
@@ -448,7 +448,7 @@
       "language": "Python",
       "stars": 164,
       "forks": 1,
-      "pushed_at": "2026-11-19T00:58:36Z",
+      "pushed_at": "2026-11-19T06:19:22Z",
       "created_at": "2026-11-13T08:30:27Z",
       "description": "Adds a drum-stick count-in before a song's first downbeat; optional guitar/vocal backing tracks",
       "readme_loaded": true,
@@ -458,7 +458,7 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 23,
@@ -477,7 +477,7 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 24,
@@ -496,7 +496,7 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 25,
@@ -515,7 +515,7 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 26,
@@ -534,7 +534,7 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 27,
@@ -553,7 +553,7 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 28,
@@ -572,7 +572,7 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 29,
@@ -591,7 +591,7 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     },
     {
       "rank": 30,
@@ -610,7 +610,7 @@
       "ram_note": null,
       "suggestion": null,
       "ai_engine": null,
-      "api_error": "HTTP 402: Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
+      "api_error": "Chưa có đánh giá AI (Lỗi mã HTTP 402): Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay."
     }
   ]
 }

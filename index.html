@@ -768,10 +768,9 @@
       <div class="header-controls">
         <label for="headerModelSelect" class="sr-only">Chuyển đổi mô hình AI</label>
         <select id="headerModelSelect" class="model-select" title="AI Model Switcher">
-          <option value="gemini-2.5-flash">⚡ Gemini 2.5 Flash (Free Tier Mặc định)</option>
-          <option value="gemini-2.5-flash-lite">🪶 Gemini 2.5 Flash-Lite (Tiết kiệm Token)</option>
-          <option value="gemini-3.5-flash">⚡ Gemini 3.5 Flash (Phân tích nhanh)</option>
-          <option value="gemini-3.5-flash-lite">🪶 Gemini 3.5 Flash-Lite</option>
+          <option value="gemini-2.5-flash-lite">⚡ Phân tích nhanh — Gemini 2.5 Flash-Lite (Free Tier)</option>
+          <option value="gemini-2.5-flash">⚡ Phân tích nhanh — Gemini 2.5 Flash</option>
+          <option value="gemini-2.5-pro">🧠 Phân tích kiến trúc sâu — Gemini 2.5 Pro</option>
         </select>
         <label for="repoSearchInput" class="sr-only">Tìm kiếm repository</label>
         <input id="repoSearchInput" class="search-input" type="search" placeholder="Tìm repo, F&B, Xe, TTS...">
@@ -803,7 +802,7 @@
           </div>
           <div class="kpi-tile">
             <span class="kpi-label">AI Engine Đang Chạy</span>
-            <span id="kpiActiveModel" class="kpi-val mono-num" style="font-size: 0.78rem;">gemini-2.5-flash</span>
+            <span id="kpiActiveModel" class="kpi-val mono-num" style="font-size: 0.78rem;">gemini-2.5-flash-lite</span>
           </div>
         </div>
 
@@ -834,10 +833,9 @@
           </div>
           <label for="chatModelSelect" class="sr-only">Chọn AI Model trong khung Chat</label>
           <select id="chatModelSelect" class="model-select" style="min-height: 38px; padding: 4px 8px;">
-            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-            <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite</option>
-            <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
-            <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash-Lite</option>
+            <option value="gemini-2.5-flash-lite">⚡ Nhanh: Gemini 2.5 Flash-Lite</option>
+            <option value="gemini-2.5-flash">⚡ Nhanh: Gemini 2.5 Flash</option>
+            <option value="gemini-2.5-pro">🧠 Sâu: Gemini 2.5 Pro</option>
           </select>
         </div>
 
@@ -888,12 +886,11 @@
   <script>
     (function () {
       const MODEL_KEY = "bal_cmd_active_model";
-      const DEFAULT_MODEL = "gemini-2.5-flash";
+      const DEFAULT_MODEL = "gemini-2.5-flash-lite";
       const ALLOWED_MODELS = [
-        "gemini-2.5-flash",
         "gemini-2.5-flash-lite",
-        "gemini-3.5-flash",
-        "gemini-3.5-flash-lite"
+        "gemini-2.5-flash",
+        "gemini-2.5-pro"
       ];
       const savedModel = localStorage.getItem(MODEL_KEY);
       const initialModel = ALLOWED_MODELS.includes(savedModel) ? savedModel : DEFAULT_MODEL;
@@ -1075,7 +1072,7 @@
 
           if (data.gemini_error) {
             el.radarApiBanner.style.display = "block";
-            el.radarApiBanner.textContent = `⚠️ Lỗi Gemini API thực tế (${modelName}): ${data.gemini_error} — Đã tắt cơ chế chấm điểm Fit ảo.`;
+            el.radarApiBanner.textContent = `⚠️ ${data.gemini_error} — Đã tắt cơ chế chấm điểm Fit ảo (Model: ${modelName}).`;
           } else {
             el.radarApiBanner.style.display = "none";
             el.radarApiBanner.textContent = "";
@@ -1113,9 +1110,9 @@
       }
 
       function formatHttpBadge(apiError) {
-        if (!apiError) return "Chưa chấm AI";
+        if (!apiError) return "Chưa có đánh giá AI";
         const m = String(apiError).match(/HTTP\s+(\d{3})/i);
-        return m ? `HTTP ${m[1]}` : "API Lỗi";
+        return m ? `Chưa có đánh giá AI (Lỗi mã HTTP ${m[1]})` : "Chưa có đánh giá AI (Lỗi API)";
       }
 
       function renderRepos() {
@@ -1198,8 +1195,8 @@
           } else {
             evalBox.append(
               createEvalCell(
-                "Trạng Thái Gemini API (Không chấm Fit ảo)",
-                ev.apiError || "Chưa nhận được kết quả đánh giá từ Gemini API.",
+                "Trạng Thái Đánh Giá AI (Không chấm Fit ảo)",
+                ev.apiError || "Chưa có đánh giá AI (Chưa nhận được kết quả từ Gemini API).",
                 true
               )
             );

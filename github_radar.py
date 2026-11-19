@@ -25,11 +25,11 @@ OUTPUT_MD = os.path.join(DATA_DIR, "tech_radar_report.md")
 GITHUB_API_ROOT = "https://api.github.com"
 TARGET_LANGUAGES = ("Python", "TypeScript")
 REPOS_PER_LANGUAGE = 15  # 15 Python + 15 TypeScript = 30 trending repositories
-DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
+DEFAULT_GEMINI_MODEL = "gemini-2.5-flash-lite"
 PREFERRED_FLASH_MODELS = (
-    "gemini-2.5-flash",
     "gemini-2.5-flash-lite",
-    "gemini-3.5-flash",
+    "gemini-flash-lite-latest",
+    "gemini-2.5-flash",
     "gemini-3.5-flash-lite",
     "gemini-flash-latest",
 )
@@ -149,10 +149,10 @@ def _parse_http_error(http_err):
         parsed = json.loads(raw_body)
         err_obj = parsed.get("error") or {}
         msg = err_obj.get("message") or raw_body or http_err.reason
-        return f"HTTP {http_err.code}: {str(msg).strip()}"
+        return f"Chưa có đánh giá AI (Lỗi mã HTTP {http_err.code}): {str(msg).strip()}"
     except Exception:
         detail = raw_body.strip() or str(http_err.reason)
-        return f"HTTP {http_err.code}: {detail}"
+        return f"Chưa có đánh giá AI (Lỗi mã HTTP {http_err.code}): {detail}"
 
 
 def discover_active_flash_model(api_key):
@@ -373,7 +373,7 @@ def run_tech_radar(total_limit=30):
             gemini_live_calls += 1
             batch_result, batch_error = analyze_repo_batch_vi(gemini_api_key, active_model, batch)
 
-            if batch_error and batch_error.startswith("HTTP 429"):
+            if batch_error and "HTTP 429" in batch_error:
                 print(f"[BAL TechRadar] Batch gap HTTP 429, cho them {BATCH_SLEEP_SECONDS}s thu lai 1 lan...")
                 time.sleep(BATCH_SLEEP_SECONDS)
                 gemini_live_calls += 1
@@ -385,12 +385,12 @@ def run_tech_radar(total_limit=30):
                     if fn_lower in batch_result and batch_result[fn_lower].get("summary_vi"):
                         analysis_by_name[fn_lower] = batch_result[fn_lower]
                     else:
-                        errors_by_name[fn_lower] = "Gemini khong tra ve ban tom tat cho repo nay trong batch JSON."
+                        errors_by_name[fn_lower] = "Chưa có đánh giá AI (Gemini không trả về bản tóm tắt trong batch JSON)."
             else:
                 last_api_error = batch_error
                 for entry in batch:
                     errors_by_name[entry["repo"].get("full_name", "").lower()] = batch_error
-                if batch_error and any(code in batch_error for code in ("HTTP 400", "HTTP 401", "HTTP 402", "HTTP 403", "HTTP 404")):
+                if batch_error and any(f"HTTP {code}" in batch_error for code in ("400", "401", "402", "403", "404")):
                     terminal_error = batch_error
 
     enriched = []

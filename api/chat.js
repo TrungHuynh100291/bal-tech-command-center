@@ -6,28 +6,26 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 
-const DEFAULT_FLASH_MODEL = "gemini-2.5-flash";
+const DEFAULT_FLASH_MODEL = "gemini-2.5-flash-lite";
 
 const ALLOWED_MODELS = {
-  "gemini-2.5-flash": {
-    provider: "gemini",
-    label: "Gemini 2.5 Flash (Free Tier Mặc định)",
-    upstreamModel: "gemini-2.5-flash"
-  },
   "gemini-2.5-flash-lite": {
     provider: "gemini",
-    label: "Gemini 2.5 Flash-Lite (Tiết kiệm Token)",
+    analysisMode: "quick_flash",
+    label: "⚡ Phân tích nhanh — Gemini 2.5 Flash-Lite (Free Tier nhẹ nhất)",
     upstreamModel: "gemini-2.5-flash-lite"
   },
-  "gemini-3.5-flash": {
+  "gemini-2.5-flash": {
     provider: "gemini",
-    label: "Gemini 3.5 Flash (Phân tích nhanh)",
-    upstreamModel: "gemini-3.5-flash"
+    analysisMode: "quick_flash",
+    label: "⚡ Phân tích nhanh — Gemini 2.5 Flash",
+    upstreamModel: "gemini-2.5-flash"
   },
-  "gemini-3.5-flash-lite": {
+  "gemini-2.5-pro": {
     provider: "gemini",
-    label: "Gemini 3.5 Flash-Lite",
-    upstreamModel: "gemini-3.5-flash-lite"
+    analysisMode: "deep_pro",
+    label: "🧠 Phân tích kiến trúc sâu — Gemini 2.5 Pro",
+    upstreamModel: "gemini-2.5-pro"
   }
 };
 
@@ -137,7 +135,8 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({
         dryRun: false,
         geminiKeyConfigured: true,
-        mode: "LIVE_GEMINI_FLASH",
+        mode: "LIVE_GEMINI",
+        analysisMode: modelCfg.analysisMode,
         model: modelCfg.upstreamModel,
         modelLabel: modelCfg.label,
         reply: gText
@@ -150,10 +149,12 @@ module.exports = async function handler(req, res) {
       dryRun: false,
       geminiKeyConfigured: true,
       mode: "API_ERROR",
+      analysisMode: modelCfg.analysisMode,
       model: modelCfg.upstreamModel,
+      modelLabel: modelCfg.label,
       upstreamStatus: errCode,
       googleStatus: gData?.error?.status || null,
-      error: `HTTP ${errCode}: ${errMsg}`
+      error: `Chưa có đánh giá AI (Lỗi mã HTTP ${errCode}): ${errMsg}`
     });
   } catch (err) {
     return res.status(500).json({ error: `HTTP 500: ${err.message}` });
