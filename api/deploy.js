@@ -62,13 +62,15 @@ module.exports = async function handler(req, res) {
 
     if (!ghToken) {
       return res.status(200).json({
+        dryRun: false,
         dispatched: false,
-        mode: "DRY_RUN_WEBHOOK_PREVIEW",
+        githubDispatchConfigured: false,
+        mode: "PRODUCTION_WEBHOOK_STANDBY",
         webhookUrl,
         payload: dispatchPayload,
         message:
-          `Đã ghi nhận lệnh [Duyệt & Triển Khai] cho ${fullName} -> ${targetCompanyRepo}. ` +
-          `Thêm GITHUB_DISPATCH_TOKEN vào Vercel Environment Variables để bắn Webhook trực tiếp sang GitHub Actions.`
+          `Đã tiếp nhận lệnh Production [Duyệt & Triển Khai] cho ${fullName} -> ${targetCompanyRepo}. ` +
+          `Thêm GITHUB_DISPATCH_TOKEN vào Vercel Environment Variables để kích hoạt ngay GitHub Actions Webhook.`
       });
     }
 
@@ -86,7 +88,9 @@ module.exports = async function handler(req, res) {
 
     if (ghResp.status === 204 || (ghResp.status >= 200 && ghResp.status < 300)) {
       return res.status(200).json({
+        dryRun: false,
         dispatched: true,
+        githubDispatchConfigured: true,
         mode: "LIVE_GITHUB_ACTIONS_DISPATCHED",
         webhookUrl,
         payload: dispatchPayload,

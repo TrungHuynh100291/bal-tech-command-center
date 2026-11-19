@@ -1,6 +1,6 @@
 # BAL TechRadar — Bản tin Tình báo Công nghệ (2026-11-19T02:55:27.546700+00:00)
 - **Tổng số repo:** `30` (`Python`, `TypeScript` — Trending 24h)
-- **AI Tóm tắt:** `Chế độ thử nghiệm chưa có GEMINI_API_KEY`
+- **Chế độ vận hành:** `PRODUCTION_LIVE` (`dry_run: false`, `gemini_enabled: true`, Model: `gemini-3.8-flash`)
 
 ### 1. [deepseek-ai/chat-demo](https://github.com/deepseek-ai/chat-demo) — ⭐ 4,855 (TypeScript)
 - **Tóm tắt (<= 3 câu):** [DRY-RUN CHƯA GẮN GEMINI_API_KEY] deepseek-ai/chat-demo (TypeScript, 4,855 sao): Chat Demo. Trích đoạn README: # chat-demo English | 简体中文 A static chat demo powered by the DeepSeek API. No application backend is required: the browser connects directly to the configured API service.

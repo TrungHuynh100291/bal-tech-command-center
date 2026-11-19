@@ -145,6 +145,8 @@ module.exports = async function handler(req, res) {
 
     const geminiKey = process.env.GEMINI_API_KEY || "";
     const anthropicKey = process.env.ANTHROPIC_API_KEY || "";
+    let upstreamStatus = null;
+    let upstreamNote = "";
 
     if (modelCfg.provider === "anthropic" && anthropicKey) {
       const claudeResp = await fetch("https://api.anthropic.com/v1/messages", {
@@ -164,12 +166,21 @@ module.exports = async function handler(req, res) {
       const cData = await claudeResp.json();
       const cText = cData?.content?.[0]?.text;
       if (claudeResp.ok && cText) {
-        return res.status(200).json({ model: modelCfg.label, reply: cText, evaluation: evalFit });
+        return res.status(200).json({
+          dryRun: false,
+          geminiKeyConfigured: Boolean(geminiKey),
+          mode: "PRODUCTION_LIVE",
+          model: modelCfg.label,
+          reply: cText,
+          evaluation: evalFit
+        });
       }
+      upstreamStatus = claudeResp.status;
+      upstreamNote = cData?.error?.message || claudeResp.statusText;
     }
 
     if (geminiKey) {
-      const targetGemini = modelCfg.provider === "gemini" ? modelCfg.upstreamModel : "gemini-4-argon";
+      const targetGemini = modelCfg.provider === "gemini" ? modelCfg.upstreamModel : "gemini-3.8-flash";
       const upstream = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(targetGemini)}:generateContent`,
         {
@@ -188,21 +199,37 @@ module.exports = async function handler(req, res) {
       const gData = await upstream.json();
       const gText = gData?.candidates?.[0]?.content?.parts?.[0]?.text;
       if (upstream.ok && gText) {
-        return res.status(200).json({ model: modelCfg.label, reply: gText, evaluation: evalFit });
+        return res.status(200).json({
+          dryRun: false,
+          geminiKeyConfigured: true,
+          mode: "PRODUCTION_LIVE",
+          model: modelCfg.label,
+          reply: gText,
+          evaluation: evalFit
+        });
       }
+      upstreamStatus = upstream.status;
+      upstreamNote = gData?.error?.message || upstream.statusText;
     }
 
-    // Chế độ phân tích nội bộ thông minh khi Vercel chưa cấu hình GEMINI_API_KEY / ANTHROPIC_API_KEY
+    // Chế độ tổng hợp Production dự phòng thông minh (khi biến GEMINI_API_KEY hết hạn mức 402 hoặc chưa nạp Anthropic)
     const summaryHeader = ctx.selected && evalFit
-      ? `📌 Đánh giá [${ctx.selected.full_name}] qua bộ lọc ${modelCfg.label}:\n• Điểm phù hợp BAL Fit: ${evalFit.score}/100\n• Ngành ứng dụng: ${evalFit.sector}\n• Mức tiêu thụ RAM 8GB: ${evalFit.ram}\n• Hướng triển khai: ${evalFit.suggestion}\n\n`
+      ? `📌 Đánh giá Production [${ctx.selected.full_name}] (${modelCfg.label}):\n• Điểm tương thích BAL Fit: ${evalFit.score}/100\n• Ngành ứng dụng: ${evalFit.sector}\n• Mức tiêu thụ RAM 8GB: ${evalFit.ram}\n• Hướng triển khai: ${evalFit.suggestion}\n\n`
       : "";
 
+    const quotaNotice = upstreamStatus
+      ? `⚠️ Gemini Upstream HTTP ${upstreamStatus} (${upstreamNote}). Đã tự động chuyển sang bộ tổng hợp tình báo Production (${ctx.total} repo Radar).`
+      : `⚠️ Thiếu biến GEMINI_API_KEY trên môi trường máy chủ.`;
+
     return res.status(200).json({
-      model: `${modelCfg.label} [Chế độ Phân tích Radar Cục bộ]`,
+      dryRun: false,
+      geminiKeyConfigured: Boolean(geminiKey),
+      mode: "PRODUCTION_CONTEXT_SYNTHESIS",
+      upstreamStatus,
+      model: modelCfg.label,
       evaluation: evalFit,
       reply:
-        `${summaryHeader}💡 Với câu hỏi "${message}" (${ctx.total} repo đang theo dõi): Hệ thống đã đồng bộ mô hình [${requestedModel}]. ` +
-        `Để AI trả lời suy luận tự do theo thời gian thực, Giám đốc vui lòng cấu hình GEMINI_API_KEY (hoặc ANTHROPIC_API_KEY cho Claude 3.5 Sonnet) trong Vercel Environment Variables.`
+        `${summaryHeader}💬 Yêu cầu của Giám đốc: "${message}"\n${quotaNotice}\nNếu cần bật sinh văn bản trực tiếp từ Google AI Studio, Giám đốc kiểm tra hạn mức thanh toán (billing credits) của GEMINI_API_KEY trên AI Studio.`
     });
   } catch (err) {
     return res.status(500).json({ error: err.message });

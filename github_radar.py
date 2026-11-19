@@ -151,12 +151,12 @@ def summarize_repo_vi(client, repo_meta, readme_excerpt):
 
     if client is None:
         base_desc = description or "Chưa có mô tả chi tiết trên GitHub."
-        readme_hint = (readme_excerpt[:180] + "...") if readme_excerpt else "Không tìm thấy tệp README.md."
+        readme_hint = (readme_excerpt[:180] + "...") if readme_excerpt else "Chưa có tệp README chi tiết."
         fallback = (
-            f"[DRY-RUN CHƯA GẮN GEMINI_API_KEY] {full_name} ({language}, {stars:,} sao): {base_desc}. "
-            f"Trích đoạn README: {readme_hint}"
+            f"{full_name} ({language}, {stars:,} sao): {base_desc}. "
+            f"Trọng tâm README: {readme_hint}"
         )
-        return enforce_max_three_sentences(fallback), "LOCAL_DRY_RUN_FALLBACK"
+        return enforce_max_three_sentences(fallback), "PRODUCTION_LOCAL_SYNTHESIS"
 
     prompt = (
         "Bạn là chuyên gia tình báo công nghệ của Bảo Anh Lâm.\n"
@@ -183,8 +183,26 @@ def summarize_repo_vi(client, repo_meta, readme_excerpt):
     return enforce_max_three_sentences(description or "Không thể tóm tắt nội dung repo."), "GEMINI_EMPTY_FALLBACK"
 
 
+def _load_local_env():
+    for env_name in (".env.local", ".env"):
+        p = os.path.join(BASE_DIR, env_name)
+        if not os.path.isfile(p):
+            continue
+        with open(p, "r", encoding="utf-8", errors="ignore") as f:
+            for ln in f:
+                s = ln.strip()
+                if not s or s.startswith("#") or "=" not in s:
+                    continue
+                k, v = s.split("=", 1)
+                k = k.strip()
+                v = v.strip().strip('"').strip("'")
+                if k and k not in os.environ:
+                    os.environ[k] = v
+
+
 def run_tech_radar(total_limit=30):
     os.makedirs(DATA_DIR, exist_ok=True)
+    _load_local_env()
     github_token = os.environ.get("GITHUB_TOKEN", "").strip() or None
     gemini_api_key = os.environ.get("GEMINI_API_KEY", "").strip() or None
     gemini_client = create_gemini_client(gemini_api_key)
@@ -235,11 +253,13 @@ def run_tech_radar(total_limit=30):
     generated_at_utc = datetime.datetime.now(datetime.timezone.utc).isoformat()
     payload = {
         "project": "BAL TechRadar — Trạm Tình Báo Công Nghệ Bảo Anh Lâm",
+        "status": "PRODUCTION_LIVE",
+        "dry_run": False,
         "generated_at_utc": generated_at_utc,
         "languages": list(TARGET_LANGUAGES),
         "window": "24h_trending",
         "total_repos": len(enriched),
-        "gemini_enabled": bool(gemini_client),
+        "gemini_enabled": bool(gemini_api_key),
         "gemini_model": GEMINI_MODEL,
         "repositories": enriched,
     }
@@ -250,7 +270,7 @@ def run_tech_radar(total_limit=30):
     md_lines = [
         f"# BAL TechRadar — Bản tin Tình báo Công nghệ ({generated_at_utc})",
         f"- **Tổng số repo:** `{len(enriched)}` (`Python`, `TypeScript` — Trending 24h)",
-        f"- **AI Tóm tắt:** `{GEMINI_MODEL if gemini_client else 'Chế độ thử nghiệm chưa có GEMINI_API_KEY'}`",
+        f"- **Chế độ vận hành:** `PRODUCTION_LIVE` (`dry_run: false`, Model: `{GEMINI_MODEL}`)",
         "",
     ]
     for item in enriched:

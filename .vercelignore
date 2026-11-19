@@ -1,5 +1,7 @@
 .git
 .github
+.env
+.env*
 __pycache__
 *.py
 requirements.txt
