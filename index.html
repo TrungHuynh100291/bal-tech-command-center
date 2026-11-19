@@ -768,10 +768,10 @@
       <div class="header-controls">
         <label for="headerModelSelect" class="sr-only">Chuyển đổi mô hình AI</label>
         <select id="headerModelSelect" class="model-select" title="AI Model Switcher">
-          <option value="gemini-4-argon">🧠 Gemini 4 Argon (Kiến trúc &amp; POS)</option>
-          <option value="gemini-3.8-flash">⚡ Gemini 3.8 Flash (Phân tích nhanh)</option>
-          <option value="gemini-3.5-flash-lite">🪶 Gemini 3.5 Flash-Lite (RAM 8GB / -80% Token)</option>
-          <option value="claude-3-5-sonnet">🛡️ Claude 3.5 Sonnet (Fallback Code/UI)</option>
+          <option value="gemini-2.5-flash">⚡ Gemini 2.5 Flash (Free Tier Mặc định)</option>
+          <option value="gemini-2.5-flash-lite">🪶 Gemini 2.5 Flash-Lite (Tiết kiệm Token)</option>
+          <option value="gemini-3.5-flash">⚡ Gemini 3.5 Flash (Phân tích nhanh)</option>
+          <option value="gemini-3.5-flash-lite">🪶 Gemini 3.5 Flash-Lite</option>
         </select>
         <label for="repoSearchInput" class="sr-only">Tìm kiếm repository</label>
         <input id="repoSearchInput" class="search-input" type="search" placeholder="Tìm repo, F&B, Xe, TTS...">
@@ -794,18 +794,20 @@
             <span id="kpiTotal" class="kpi-val mono-num">0</span>
           </div>
           <div class="kpi-tile">
-            <span class="kpi-label">Hợp F&amp;B / Xe (Fit ≥ 85)</span>
+            <span class="kpi-label">AI Fit ≥ 85</span>
             <span id="kpiFitHigh" class="kpi-val mono-num" style="color: var(--status-success);">0</span>
           </div>
           <div class="kpi-tile">
-            <span class="kpi-label">Siêu nhẹ RAM 8GB</span>
+            <span class="kpi-label">Nhẹ RAM 8GB (AI)</span>
             <span id="kpiLight" class="kpi-val mono-num" style="color: var(--status-success);">0</span>
           </div>
           <div class="kpi-tile">
             <span class="kpi-label">AI Engine Đang Chạy</span>
-            <span id="kpiActiveModel" class="kpi-val mono-num" style="font-size: 0.78rem;">gemini-4-argon</span>
+            <span id="kpiActiveModel" class="kpi-val mono-num" style="font-size: 0.78rem;">gemini-2.5-flash</span>
           </div>
         </div>
+
+        <div id="radarApiBanner" class="alert-inline" role="alert" style="display:none; padding: 8px 10px; border: 1px solid rgba(239, 68, 68, 0.45); border-radius: var(--radius-md); background: rgba(239, 68, 68, 0.08);"></div>
 
         <div class="pane-toolbar">
           <div class="filter-row">
@@ -828,14 +830,14 @@
         <div class="chat-header">
           <div>
             <h2>Cố vấn AI Công Nghệ</h2>
-            <div class="header-meta">Đánh giá tích hợp F&amp;B Hy Chay &amp; Đình Nhân Car</div>
+            <div class="header-meta">Gemini Flash Free Tier • Minh bạch trạng thái API</div>
           </div>
           <label for="chatModelSelect" class="sr-only">Chọn AI Model trong khung Chat</label>
           <select id="chatModelSelect" class="model-select" style="min-height: 38px; padding: 4px 8px;">
-            <option value="gemini-4-argon">Gemini 4 Argon</option>
-            <option value="gemini-3.8-flash">Gemini 3.8 Flash</option>
+            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+            <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite</option>
+            <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
             <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash-Lite</option>
-            <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
           </select>
         </div>
 
@@ -846,8 +848,8 @@
 
         <div id="chatMessages" class="chat-messages" aria-live="polite">
           <div class="msg msg-ai">
-            <div class="msg-meta">AI Model Switcher • Ready</div>
-            Xin chào Giám đốc. Mỗi repository bên trái đã được chấm điểm tự động theo tiêu chí F&amp;B Hy Chay / Xe Du Lịch Đình Nhân và định mức RAM 8GB. Giám đốc có thể đổi mô hình AI ở góc trên và chọn bất kỳ repo nào để phân tích sâu hoặc bấm [⚡ Duyệt &amp; Triển Khai].
+            <div class="msg-meta">Gemini Flash • Ready</div>
+            Xin chào Giám đốc. Hệ thống sử dụng trực tiếp Gemini dòng Flash (Free Tier) để tóm tắt README thật và chấm điểm tương thích F&amp;B Hy Chay / Xe Đình Nhân. Nếu Google API trả lỗi (402/429/400/500), hệ thống sẽ hiển thị nguyên văn mã lỗi thực tế thay vì gán điểm ảo.
           </div>
         </div>
 
@@ -886,6 +888,16 @@
   <script>
     (function () {
       const MODEL_KEY = "bal_cmd_active_model";
+      const DEFAULT_MODEL = "gemini-2.5-flash";
+      const ALLOWED_MODELS = [
+        "gemini-2.5-flash",
+        "gemini-2.5-flash-lite",
+        "gemini-3.5-flash",
+        "gemini-3.5-flash-lite"
+      ];
+      const savedModel = localStorage.getItem(MODEL_KEY);
+      const initialModel = ALLOWED_MODELS.includes(savedModel) ? savedModel : DEFAULT_MODEL;
+
       const state = {
         radar: null,
         repos: [],
@@ -895,7 +907,7 @@
         selectedRepo: null,
         pendingDeployRepo: null,
         sendingChat: false,
-        activeModel: localStorage.getItem(MODEL_KEY) || "gemini-4-argon"
+        activeModel: initialModel
       };
 
       const el = {
@@ -907,6 +919,7 @@
         unlockBtn: document.getElementById("unlockBtn"),
         commandShell: document.getElementById("commandShell"),
         radarTimestamp: document.getElementById("radarTimestamp"),
+        radarApiBanner: document.getElementById("radarApiBanner"),
         headerModelSelect: document.getElementById("headerModelSelect"),
         chatModelSelect: document.getElementById("chatModelSelect"),
         kpiTotal: document.getElementById("kpiTotal"),
@@ -943,80 +956,35 @@
         mobTabChat: document.getElementById("mobTabChat")
       };
 
-      function evaluateBalFit(repo) {
-        const blob = `${repo.full_name || ""} ${repo.description || ""} ${repo.summary_vi || ""}`.toLowerCase();
-        let score = 58;
-        let sector = "⚡ Hạ tầng AI Chung";
-        let isFnb = false;
-        let isCar = false;
-        let isLight = false;
-        let ram = "🟡 Trung bình (Worker/Edge)";
-        let actionNote = "Tham khảo kiến trúc mở rộng quy trình tự động hóa.";
-
-        if (/(appoint|booking|calendar|schedule|crm|chat|telegram|notify|radar)/.test(blob)) {
-          score = 92;
-          sector = "🚘 Xe Dịch Vụ & 🍃 Đặt Bàn";
-          isFnb = true;
-          isCar = true;
-          isLight = true;
-          ram = "🟢 Siêu nhẹ (Cloud / 0MB RAM)";
-          actionNote = "Tích hợp đặt lịch Chuyên cơ Carnival 300k, nhắc lịch 8h/15h & điều phối CSKH.";
-        } else if (/(marketing|seo|copy|email|ads|social|content)/.test(blob)) {
-          score = 94;
-          sector = "🍃 F&B Hy Chay & 🚘 Xe Car";
-          isFnb = true;
-          isCar = true;
-          isLight = true;
-          ram = "🟢 Siêu nhẹ (Skill / Prompt)";
-          actionNote = "Nạp vào quy trình SEO Fanpage Hy Chay, Đình Nhân Car & seeding tự nhiên.";
-        } else if (/(tts|voice|speech|audio|voca)/.test(blob)) {
-          score = 90;
-          sector = "🍃 POS Hy Chay & 🚘 Điều Hành";
-          isFnb = true;
-          isCar = true;
-          isLight = true;
-          ram = "🟢 Siêu nhẹ (CPU 8GB / Browser)";
-          actionNote = "Đọc loa báo đơn POS 280 Trần Hưng Đạo & thông báo chuyến xe cho tài xế.";
-        } else if (/(video|clip|edit|drama|shot|canvas|typeface|font|ui)/.test(blob)) {
-          score = 88;
-          sector = "🍃 Media Hy Chay & 🚘 TVC Xe";
-          isFnb = true;
-          isCar = true;
-          ram = "🟡 Render Colab / Browser GPU";
-          actionNote = "Dựng Reels món Chả Mít Non/Ruốc Nấm 9:16 & chuẩn hóa giao diện Website.";
-        } else if (/(payment|invoice|tax|nfse|checkout|qr)/.test(blob)) {
-          score = 86;
-          sector = "🍃 Thuế HTKK & 🚘 Cọc VietQR";
-          isFnb = true;
-          isCar = true;
-          isLight = true;
-          ram = "🟢 Siêu nhẹ (Serverless Webhook)";
-          actionNote = "Tối ưu kết xuất hóa đơn điện tử tách shippingFee & đối soát cọc xe 30%.";
-        } else if (/(orchestra|agent|edge|cloudflare|serverless|worker)/.test(blob)) {
-          score = 84;
-          sector = "⚡ Điều Phối Agent BAL V6";
-          isFnb = true;
-          isLight = true;
-          ram = "🟢 Siêu nhẹ (Cloud Edge)";
-          actionNote = "Đẩy tác vụ nặng lên Cloud Worker để máy 8GB RAM luôn vận hành mượt mà.";
-        } else if (/(trading|miner|dma|game|pokemon|crypto)/.test(blob)) {
-          score = 22;
-          sector = "⚠️ Ngoài Ngành F&B / Xe";
-          ram = "🔴 Không phù hợp";
-          actionNote = "Không tích hợp vào POS V39 hay luồng đặt xe nhằm bảo toàn an ninh hệ thống.";
-        }
-
-        return { score, sector, isFnb, isCar, isLight, ram, actionNote };
+      function extractAiEval(repo) {
+        const hasAi = typeof repo.fit_score === "number" && !Number.isNaN(repo.fit_score);
+        const sector = hasAi ? (repo.sector || "Chưa phân loại") : "";
+        const ram = hasAi ? (repo.ram_note || "Chưa rõ") : "";
+        const actionNote = hasAi ? (repo.suggestion || "") : "";
+        const sectorLower = sector.toLowerCase();
+        const ramLower = ram.toLowerCase();
+        return {
+          hasAi,
+          score: hasAi ? repo.fit_score : null,
+          sector,
+          ram,
+          actionNote,
+          apiError: repo.api_error || null,
+          isFnb: hasAi && /(f&b|hy chay|nhà hàng|bếp|pos)/i.test(sectorLower),
+          isCar: hasAi && /(xe|car|đình nhân|vận tải|du lịch)/i.test(sectorLower),
+          isLight: hasAi && /(nhẹ|8gb|serverless|cloud|edge|ít tốn)/i.test(ramLower)
+        };
       }
 
       function syncModelSelection(modelId, announce) {
-        state.activeModel = modelId;
-        localStorage.setItem(MODEL_KEY, modelId);
-        el.headerModelSelect.value = modelId;
-        el.chatModelSelect.value = modelId;
-        el.kpiActiveModel.textContent = modelId;
+        const safeModel = ALLOWED_MODELS.includes(modelId) ? modelId : DEFAULT_MODEL;
+        state.activeModel = safeModel;
+        localStorage.setItem(MODEL_KEY, safeModel);
+        el.headerModelSelect.value = safeModel;
+        el.chatModelSelect.value = safeModel;
+        el.kpiActiveModel.textContent = safeModel;
         if (announce) {
-          showToast(`Đã chuyển AI Model Switcher sang: ${modelId}`);
+          showToast(`Đã chuyển AI Model Switcher sang: ${safeModel}`);
         }
       }
 
@@ -1098,13 +1066,23 @@
           const data = await resp.json();
           state.radar = data;
           const rawRepos = Array.isArray(data.repositories) ? data.repositories : [];
-          state.repos = rawRepos.map((r) => ({ ...r, _eval: evaluateBalFit(r) }));
+          state.repos = rawRepos.map((r) => ({ ...r, _eval: extractAiEval(r) }));
 
           const ts = data.generated_at_utc ? new Date(data.generated_at_utc).toLocaleString("vi-VN") : "Chưa rõ";
-          el.radarTimestamp.textContent = `Cập nhật: ${ts} • ${state.repos.length} repo Trending`;
+          const modelName = data.gemini_model || DEFAULT_MODEL;
+          const translated = Number(data.translated_count || 0);
+          el.radarTimestamp.textContent = `Cập nhật: ${ts} • ${state.repos.length} repo • AI: ${modelName} (${translated}/${state.repos.length} đã dịch)`;
+
+          if (data.gemini_error) {
+            el.radarApiBanner.style.display = "block";
+            el.radarApiBanner.textContent = `⚠️ Lỗi Gemini API thực tế (${modelName}): ${data.gemini_error} — Đã tắt cơ chế chấm điểm Fit ảo.`;
+          } else {
+            el.radarApiBanner.style.display = "none";
+            el.radarApiBanner.textContent = "";
+          }
 
           el.kpiTotal.textContent = state.repos.length;
-          el.kpiFitHigh.textContent = state.repos.filter((r) => r._eval.score >= 85).length;
+          el.kpiFitHigh.textContent = state.repos.filter((r) => r._eval.hasAi && r._eval.score >= 85).length;
           el.kpiLight.textContent = state.repos.filter((r) => r._eval.isLight).length;
           el.mobCnt.textContent = state.repos.length;
 
@@ -1134,6 +1112,12 @@
         return cell;
       }
 
+      function formatHttpBadge(apiError) {
+        if (!apiError) return "Chưa chấm AI";
+        const m = String(apiError).match(/HTTP\s+(\d{3})/i);
+        return m ? `HTTP ${m[1]}` : "API Lỗi";
+      }
+
       function renderRepos() {
         const q = state.searchQuery.toLowerCase();
         const filtered = state.repos.filter((repo) => {
@@ -1144,7 +1128,7 @@
           if (state.activeFilter === "CAR" && !ev.isCar) return false;
           if (state.activeFilter === "LIGHT" && !ev.isLight) return false;
           if (!q) return true;
-          const hay = `${repo.full_name} ${repo.description} ${repo.summary_vi} ${ev.sector} ${ev.actionNote}`.toLowerCase();
+          const hay = `${repo.full_name} ${repo.description || ""} ${repo.summary_vi || ""} ${ev.sector} ${ev.actionNote} ${ev.apiError || ""}`.toLowerCase();
           return hay.includes(q);
         });
 
@@ -1179,8 +1163,13 @@
           rankPill.textContent = `#${repo.rank}`;
 
           const fitPill = document.createElement("span");
-          fitPill.className = "pill mono-num " + (ev.score >= 85 ? "pill-fit-high" : (ev.score >= 55 ? "pill-fit-mid" : "pill-fit-low"));
-          fitPill.textContent = `Fit ${ev.score}/100`;
+          if (ev.hasAi) {
+            fitPill.className = "pill mono-num " + (ev.score >= 85 ? "pill-fit-high" : (ev.score >= 55 ? "pill-fit-mid" : "pill-fit-low"));
+            fitPill.textContent = `Fit ${ev.score}/100`;
+          } else {
+            fitPill.className = "pill mono-num pill-fit-low";
+            fitPill.textContent = formatHttpBadge(ev.apiError);
+          }
 
           const langPill = document.createElement("span");
           langPill.className = "pill";
@@ -1197,15 +1186,24 @@
           summary.className = "repo-summary";
           summary.textContent = repo.summary_vi || repo.description || "Chưa có mô tả.";
 
-          // Evaluation Criteria Matrix for F&B / Xe Dich Vu & RAM 8GB
           const evalBox = document.createElement("div");
           evalBox.className = "eval-grid";
-          evalBox.append(
-            createEvalCell("Ngành Ứng Dụng", ev.sector, false),
-            createEvalCell("Định Mức RAM 8GB", ev.ram, false),
-            createEvalCell("Điểm Tương Thích", `${ev.score}/100 điểm`, false),
-            createEvalCell("Khuyến Nghị Tích Hợp (Hy Chay / Đình Nhân Car)", ev.actionNote, true)
-          );
+          if (ev.hasAi) {
+            evalBox.append(
+              createEvalCell("Ngành Ứng Dụng (AI)", ev.sector, false),
+              createEvalCell("Định Mức RAM 8GB", ev.ram, false),
+              createEvalCell("Điểm AI Fit", `${ev.score}/100 điểm`, false),
+              createEvalCell("Khuyến Nghị Thực Tế Từ README", ev.actionNote || "Không có khuyến nghị thêm.", true)
+            );
+          } else {
+            evalBox.append(
+              createEvalCell(
+                "Trạng Thái Gemini API (Không chấm Fit ảo)",
+                ev.apiError || "Chưa nhận được kết quả đánh giá từ Gemini API.",
+                true
+              )
+            );
+          }
 
           const jsonPre = document.createElement("pre");
           jsonPre.className = "json-block";
@@ -1253,7 +1251,8 @@
       function selectRepoForChat(repo) {
         state.selectedRepo = repo;
         if (repo) {
-          el.selectedContextText.textContent = `Đang chọn: ${repo.full_name} (Fit ${repo._eval.score}/100)`;
+          const fitLabel = repo._eval.hasAi ? `Fit ${repo._eval.score}/100` : formatHttpBadge(repo._eval.apiError);
+          el.selectedContextText.textContent = `Đang chọn: ${repo.full_name} (${fitLabel})`;
           el.clearContextBtn.hidden = false;
           el.chatInput.focus();
         } else {
@@ -1297,11 +1296,16 @@
               model: state.activeModel
             })
           });
-          const data = await resp.json();
-          if (resp.ok) {
+          const data = await resp.json().catch(() => ({}));
+          if (resp.ok && data.reply) {
             appendChatMessage("ai", data.model || state.activeModel, data.reply);
           } else {
-            appendChatMessage("ai", "Cảnh báo API", data.error || "Không nhận được phản hồi từ AI.");
+            const errCode = data.upstreamStatus || resp.status;
+            appendChatMessage(
+              "ai",
+              `Lỗi API (HTTP ${errCode}) • ${data.model || state.activeModel}`,
+              `⚠️ ${data.error || "Không nhận được phản hồi hợp lệ từ Gemini API."}`
+            );
           }
         } catch (err) {
           appendChatMessage("ai", "Lỗi kết nối", err.message);
@@ -1313,8 +1317,11 @@
 
       function openDeployModal(repo) {
         state.pendingDeployRepo = repo;
+        const evalDesc = repo._eval.hasAi
+          ? `AI Fit ${repo._eval.score}/100 — ${repo._eval.sector}`
+          : (repo._eval.apiError || "Chưa có chấm điểm AI");
         el.deployDialogDesc.textContent =
-          `Kích hoạt Webhook GitHub Actions cho "${repo.full_name}" (BAL Fit ${repo._eval.score}/100 — ${repo._eval.sector}) để Antigravity tự động tải mã nguồn, tạo cấu hình môi trường và push lên kho lưu trữ công ty.`;
+          `Kích hoạt Webhook GitHub Actions cho "${repo.full_name}" (${evalDesc}) để Antigravity tự động tải mã nguồn, tạo cấu hình môi trường và push lên kho lưu trữ công ty.`;
         if (repo._eval.isCar && !repo._eval.isFnb) {
           el.targetRepoSelect.value = "TrungHuynh100291/dinhnhan-car-rental";
         }

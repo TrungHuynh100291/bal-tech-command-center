@@ -12,6 +12,7 @@ import json
 import os
 import re
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -24,7 +25,16 @@ OUTPUT_MD = os.path.join(DATA_DIR, "tech_radar_report.md")
 GITHUB_API_ROOT = "https://api.github.com"
 TARGET_LANGUAGES = ("Python", "TypeScript")
 REPOS_PER_LANGUAGE = 15  # 15 Python + 15 TypeScript = 30 trending repositories
-GEMINI_MODEL = "gemini-3.8-flash"
+DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
+PREFERRED_FLASH_MODELS = (
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-3.5-flash",
+    "gemini-3.5-flash-lite",
+    "gemini-flash-latest",
+)
+BATCH_SIZE = 6
+BATCH_SLEEP_SECONDS = 5
 
 
 def _github_headers(token=None, accept="application/vnd.github+json"):
@@ -132,109 +142,160 @@ def enforce_max_three_sentences(text):
     return " ".join(parts[:3])
 
 
-def create_gemini_client(api_key):
-    if not api_key:
-        return None
+def _parse_http_error(http_err):
+    raw_body = ""
     try:
-        from google import genai
-        return genai.Client(api_key=api_key)
-    except ImportError:
-        return None
+        raw_body = http_err.read().decode("utf-8", errors="ignore")
+        parsed = json.loads(raw_body)
+        err_obj = parsed.get("error") or {}
+        msg = err_obj.get("message") or raw_body or http_err.reason
+        return f"HTTP {http_err.code}: {str(msg).strip()}"
+    except Exception:
+        detail = raw_body.strip() or str(http_err.reason)
+        return f"HTTP {http_err.code}: {detail}"
 
 
-def _synthesize_production_summary(repo_meta, readme_excerpt):
-    """Tong hop ban tom tat tieng Viet toi da 3 cau tu metadata & README (chuan Production, 0 DRY-RUN)."""
-    full_name = repo_meta.get("full_name", "")
-    description = (repo_meta.get("description") or "").strip().rstrip(".")
-    language = repo_meta.get("language") or "Code"
-    stars = repo_meta.get("stargazers_count", 0)
-    blob = f"{full_name} {description} {readme_excerpt}".lower()
+def discover_active_flash_model(api_key):
+    """Kiem tra ListModels thuc te cua GEMINI_API_KEY va chon model dong Flash ho tro generateContent."""
+    if not api_key:
+        return DEFAULT_GEMINI_MODEL, [], "Thieu GEMINI_API_KEY"
 
-    if any(k in blob for k in ("appoint", "booking", "calendar", "crm", "chat", "telegram", "radar", "notify")):
-        fit_hint = "Phù hợp tham khảo cho luồng đặt lịch xe Đình Nhân Car, đặt bàn Hy Chay và bot CSKH."
-    elif any(k in blob for k in ("marketing", "seo", "copy", "email", "ads", "social", "content")):
-        fit_hint = "Ứng dụng trực tiếp vào sản xuất nội dung SEO Fanpage Hy Chay và chiến dịch địa phương."
-    elif any(k in blob for k in ("tts", "voice", "speech", "audio", "voca")):
-        fit_hint = "Thích hợp tích hợp đọc thông báo đơn mới tại quầy POS 280 Trần Hưng Đạo và điều hành xe."
-    elif any(k in blob for k in ("video", "clip", "edit", "drama", "shot", "canvas", "typeface", "font", "ui", "shadcn", "react")):
-        fit_hint = "Hữu ích nâng cấp giao diện Dashboard và dựng Reels món chay / xe Carnival 9:16."
-    elif any(k in blob for k in ("payment", "invoice", "tax", "nfse", "checkout", "qr")):
-        fit_hint = "Tham khảo tối ưu luồng hóa đơn điện tử HTKK và đối soát thanh toán VietQR."
-    elif any(k in blob for k in ("orchestra", "agent", "edge", "cloudflare", "serverless", "worker", "mcp", "observability")):
-        fit_hint = "Phù hợp đẩy tác vụ nền lên Cloud/Edge giúp máy văn phòng 8GB RAM luôn nhẹ."
-    else:
-        fit_hint = "Theo dõi xu hướng công nghệ mới trước khi đánh giá tích hợp vào hệ thống nội bộ."
+    url = "https://generativelanguage.googleapis.com/v1beta/models"
+    req = urllib.request.Request(
+        url,
+        headers={"x-goog-api-key": api_key},
+        method="GET",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        flash_models = []
+        for m in data.get("models", []):
+            name = str(m.get("name", "")).replace("models/", "")
+            methods = m.get("supportedGenerationMethods") or []
+            if "generateContent" in methods and "flash" in name.lower():
+                flash_models.append(name)
 
-    base_desc = description if description else "Dự án mã nguồn mở đang thịnh hành trong 24 giờ qua trên GitHub"
-    readme_snip = re.sub(r"^#+\s*", "", (readme_excerpt or "").strip())
-    readme_sentence = f" Điểm nhấn README: {readme_snip[:160].rstrip('. ')}." if readme_snip else ""
-    combined = f"{full_name} ({language}, {stars:,} sao) là dự án {base_desc}.{readme_sentence} {fit_hint}"
-    return enforce_max_three_sentences(combined)
+        selected = None
+        for preferred in PREFERRED_FLASH_MODELS:
+            if preferred in flash_models:
+                selected = preferred
+                break
+        if not selected and flash_models:
+            selected = flash_models[0]
+        if not selected:
+            return DEFAULT_GEMINI_MODEL, flash_models, "ListModels khong tim thay model Flash ho tro generateContent"
+        return selected, flash_models, None
+    except urllib.error.HTTPError as http_err:
+        return DEFAULT_GEMINI_MODEL, [], _parse_http_error(http_err)
+    except Exception as exc:
+        return DEFAULT_GEMINI_MODEL, [], f"ListModels error: {exc}"
 
 
-def _call_gemini_rest(api_key, prompt):
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
+def _extract_json_array(raw_text):
+    clean = str(raw_text or "").strip()
+    if clean.startswith("```"):
+        clean = re.sub(r"^```(?:json)?\s*", "", clean, flags=re.IGNORECASE)
+        clean = re.sub(r"\s*```$", "", clean)
+    try:
+        parsed = json.loads(clean)
+        if isinstance(parsed, list):
+            return parsed
+        if isinstance(parsed, dict) and isinstance(parsed.get("items"), list):
+            return parsed["items"]
+    except Exception:
+        pass
+    match = re.search(r"\[[\s\S]*\]", clean)
+    if match:
+        try:
+            parsed = json.loads(match.group(0))
+            if isinstance(parsed, list):
+                return parsed
+        except Exception:
+            pass
+    return None
+
+
+def analyze_repo_batch_vi(api_key, model_id, batch_items):
+    """
+    Goi Gemini REST generateContent cho 1 batch 5-10 repo (chong 429 RPM).
+    Tra ve (dict_theo_full_name_lower, error_str). KHONG sinh du lieu gia khi API loi.
+    """
+    repo_blocks = []
+    for entry in batch_items:
+        repo = entry["repo"]
+        readme = (entry["readme_excerpt"] or "")[:900]
+        repo_blocks.append({
+            "full_name": repo.get("full_name", ""),
+            "language": repo.get("language") or "Unknown",
+            "stars": repo.get("stargazers_count", 0),
+            "description": (repo.get("description") or "").strip(),
+            "readme_excerpt": readme,
+        })
+
+    prompt = (
+        "Bạn là chuyên gia tình báo công nghệ của Công ty Bảo Anh Lâm (Hy Chay F&B & Xe Du Lịch Đình Nhân).\n"
+        "Hãy đọc danh sách repository GitHub JSON bên dưới và trả về ĐÚNG MỘT JSON ARRAY (không markdown, không giải thích ngoài JSON).\n"
+        "Mỗi phần tử tương ứng 1 repo với các khóa bắt buộc:\n"
+        '- "full_name": giữ nguyên chính xác tên repo đầu vào\n'
+        '- "summary_vi": tóm tắt bằng tiếng Việt tối đa 3 câu văn súc tích, sát đúng nội dung description và readme_excerpt thật\n'
+        '- "fit_score": số nguyên từ 0 đến 100 đánh giá mức độ phù hợp thực tế cho F&B Hy Chay / Xe Du Lịch Đình Nhân / vận hành Cloud nhẹ cho máy RAM 8GB (chấm thấp nếu không liên quan)\n'
+        '- "sector": nhãn ngắn tiếng Việt (ví dụ: "F&B Hy Chay", "Xe Dịch Vụ", "Hạ tầng & DevTools", "Ngoài ngành F&B/Xe")\n'
+        '- "ram_note": đánh giá ngắn bằng tiếng Việt về mức tiêu thụ tài nguyên / RAM 8GB\n'
+        '- "suggestion": 1 câu khuyến nghị ứng dụng thực tế bằng tiếng Việt dựa đúng trên README\n\n'
+        f"DỮ LIỆU ĐẦU VÀO:\n{json.dumps(repo_blocks, ensure_ascii=False)}"
+    )
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{urllib.parse.quote(model_id)}:generateContent"
     payload = json.dumps({
         "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": 0.3, "maxOutputTokens": 250}
+        "generationConfig": {
+            "temperature": 0.2,
+            "maxOutputTokens": 2400,
+            "responseMimeType": "application/json",
+        },
     }).encode("utf-8")
+
     req = urllib.request.Request(
         url,
         data=payload,
         headers={"Content-Type": "application/json", "x-goog-api-key": api_key},
-        method="POST"
-    )
-    with urllib.request.urlopen(req, timeout=15) as resp:
-        data = json.loads(resp.read().decode("utf-8"))
-        parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
-        return "".join(p.get("text", "") for p in parts).strip()
-
-
-def summarize_repo_vi(client, api_key, repo_meta, readme_excerpt, runtime_state):
-    """Goi Google GenAI (SDK hoac REST) tom tat description + README.md sang tieng Viet <= 3 cau."""
-    full_name = repo_meta.get("full_name", "")
-    description = (repo_meta.get("description") or "").strip()
-    language = repo_meta.get("language") or "Unknown"
-    stars = repo_meta.get("stargazers_count", 0)
-
-    if not api_key or runtime_state.get("quota_blocked"):
-        return _synthesize_production_summary(repo_meta, readme_excerpt), "PRODUCTION_BAL_SYNTHESIS"
-
-    prompt = (
-        "Bạn là chuyên gia tình báo công nghệ của Bảo Anh Lâm.\n"
-        "Hãy đọc thông tin repository GitHub dưới đây và tóm tắt bằng tiếng Việt ngắn gọn, rõ giá trị ứng dụng thực tế.\n"
-        "YÊU CẦU BẮT BUỘC: Chỉ viết tối đa 3 câu văn súc tích, không gạch đầu dòng, không dùng Markdown.\n\n"
-        f"- Tên Repo: {full_name} ({language} | {stars} stars)\n"
-        f"- Description: {description or 'Không có'}\n"
-        f"- Nội dung README.md (trích đoạn): {readme_excerpt or 'Không có'}\n"
+        method="POST",
     )
 
     try:
-        text_out = ""
-        if client is not None:
-            interaction = client.interactions.create(
-                model=GEMINI_MODEL,
-                input=prompt,
-                store=False,
-            )
-            text_out = interaction.output_text or ""
-        else:
-            text_out = _call_gemini_rest(api_key, prompt)
-        summary = enforce_max_three_sentences(text_out)
-        if summary:
-            runtime_state["gemini_live_calls"] += 1
-            return summary, GEMINI_MODEL
-    except urllib.error.HTTPError as http_err:
-        if http_err.code in (402, 403, 429):
-            runtime_state["quota_blocked"] = True
-            runtime_state["upstream_status"] = f"HTTP_{http_err.code}_FALLBACK"
-    except Exception as exc:
-        err_str = str(exc)
-        if "402" in err_str or "depleted" in err_str.lower() or "429" in err_str:
-            runtime_state["quota_blocked"] = True
-            runtime_state["upstream_status"] = "HTTP_402_BILLING_FALLBACK"
+        with urllib.request.urlopen(req, timeout=35) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+        raw_text = "".join(p.get("text", "") for p in parts).strip()
+        items = _extract_json_array(raw_text)
+        if not items:
+            return None, f"HTTP 200 ParseError: Gemini khong tra ve JSON array hop le ({raw_text[:140]})"
 
-    return _synthesize_production_summary(repo_meta, readme_excerpt), "PRODUCTION_BAL_SYNTHESIS"
+        mapped = {}
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            key = str(item.get("full_name", "")).strip().lower()
+            if not key:
+                continue
+            raw_score = item.get("fit_score")
+            try:
+                fit_score = max(0, min(100, int(round(float(raw_score)))))
+            except (TypeError, ValueError):
+                fit_score = None
+            mapped[key] = {
+                "summary_vi": enforce_max_three_sentences(item.get("summary_vi", "")),
+                "fit_score": fit_score,
+                "sector": str(item.get("sector") or "").strip() or None,
+                "ram_note": str(item.get("ram_note") or "").strip() or None,
+                "suggestion": str(item.get("suggestion") or "").strip() or None,
+            }
+        return mapped, None
+    except urllib.error.HTTPError as http_err:
+        return None, _parse_http_error(http_err)
+    except Exception as exc:
+        return None, f"RequestError: {exc}"
 
 
 def _load_local_env():
@@ -259,7 +320,6 @@ def run_tech_radar(total_limit=30):
     _load_local_env()
     github_token = os.environ.get("GITHUB_TOKEN", "").strip() or None
     gemini_api_key = os.environ.get("GEMINI_API_KEY", "").strip() or None
-    gemini_client = create_gemini_client(gemini_api_key)
 
     per_lang = max(1, total_limit // len(TARGET_LANGUAGES))
     remainder = total_limit % len(TARGET_LANGUAGES)
@@ -275,18 +335,11 @@ def run_tech_radar(total_limit=30):
                 seen_full_names.add(fn)
                 trending_repos.append(repo)
 
-    # Sap xep lai danh sach tong hop theo so sao giam dan trong 24h
     trending_repos.sort(key=lambda r: r.get("stargazers_count", 0), reverse=True)
     trending_repos = trending_repos[:total_limit]
 
-    runtime_state = {
-        "quota_blocked": False,
-        "gemini_live_calls": 0,
-        "upstream_status": "LIVE" if gemini_api_key else "NO_KEY",
-    }
-
-    enriched = []
-    for rank, repo in enumerate(trending_repos, start=1):
+    repo_inputs = []
+    for repo in trending_repos:
         full_name = repo.get("full_name", "")
         default_branch = repo.get("default_branch", "main")
         readme_excerpt = fetch_repo_readme_excerpt(
@@ -294,9 +347,63 @@ def run_tech_radar(total_limit=30):
             default_branch=default_branch,
             github_token=github_token,
         )
-        summary_vi, engine_used = summarize_repo_vi(
-            gemini_client, gemini_api_key, repo, readme_excerpt, runtime_state
-        )
+        repo_inputs.append({"repo": repo, "readme_excerpt": readme_excerpt})
+
+    active_model, available_flash_models, list_models_error = discover_active_flash_model(gemini_api_key)
+    print(f"[BAL TechRadar] ListModels Flash={available_flash_models[:8]} | Selected={active_model} | ListErr={list_models_error}")
+
+    analysis_by_name = {}
+    errors_by_name = {}
+    gemini_live_calls = 0
+    terminal_error = None if gemini_api_key else "Thieu bien moi truong GEMINI_API_KEY"
+    last_api_error = terminal_error or list_models_error
+
+    if gemini_api_key:
+        for start in range(0, len(repo_inputs), BATCH_SIZE):
+            batch = repo_inputs[start:start + BATCH_SIZE]
+            if terminal_error:
+                for entry in batch:
+                    errors_by_name[entry["repo"].get("full_name", "").lower()] = terminal_error
+                continue
+
+            if start > 0:
+                print(f"[BAL TechRadar] Cho {BATCH_SLEEP_SECONDS}s chong 429 truoc batch {start // BATCH_SIZE + 1}...")
+                time.sleep(BATCH_SLEEP_SECONDS)
+
+            gemini_live_calls += 1
+            batch_result, batch_error = analyze_repo_batch_vi(gemini_api_key, active_model, batch)
+
+            if batch_error and batch_error.startswith("HTTP 429"):
+                print(f"[BAL TechRadar] Batch gap HTTP 429, cho them {BATCH_SLEEP_SECONDS}s thu lai 1 lan...")
+                time.sleep(BATCH_SLEEP_SECONDS)
+                gemini_live_calls += 1
+                batch_result, batch_error = analyze_repo_batch_vi(gemini_api_key, active_model, batch)
+
+            if batch_result:
+                for entry in batch:
+                    fn_lower = entry["repo"].get("full_name", "").lower()
+                    if fn_lower in batch_result and batch_result[fn_lower].get("summary_vi"):
+                        analysis_by_name[fn_lower] = batch_result[fn_lower]
+                    else:
+                        errors_by_name[fn_lower] = "Gemini khong tra ve ban tom tat cho repo nay trong batch JSON."
+            else:
+                last_api_error = batch_error
+                for entry in batch:
+                    errors_by_name[entry["repo"].get("full_name", "").lower()] = batch_error
+                if batch_error and any(code in batch_error for code in ("HTTP 400", "HTTP 401", "HTTP 402", "HTTP 403", "HTTP 404")):
+                    terminal_error = batch_error
+
+    enriched = []
+    translated_count = 0
+    for rank, entry in enumerate(repo_inputs, start=1):
+        repo = entry["repo"]
+        full_name = repo.get("full_name", "")
+        fn_lower = full_name.lower()
+        ai_data = analysis_by_name.get(fn_lower)
+        api_error = errors_by_name.get(fn_lower)
+        if ai_data and ai_data.get("summary_vi"):
+            translated_count += 1
+
         enriched.append({
             "rank": rank,
             "full_name": full_name,
@@ -307,24 +414,43 @@ def run_tech_radar(total_limit=30):
             "pushed_at": repo.get("pushed_at"),
             "created_at": repo.get("created_at"),
             "description": repo.get("description") or "",
-            "readme_loaded": bool(readme_excerpt),
-            "summary_vi": summary_vi,
-            "ai_engine": engine_used,
+            "readme_loaded": bool(entry["readme_excerpt"]),
+            "summary_vi": ai_data.get("summary_vi") if ai_data else None,
+            "fit_score": ai_data.get("fit_score") if ai_data else None,
+            "sector": ai_data.get("sector") if ai_data else None,
+            "ram_note": ai_data.get("ram_note") if ai_data else None,
+            "suggestion": ai_data.get("suggestion") if ai_data else None,
+            "ai_engine": active_model if ai_data else None,
+            "api_error": api_error,
         })
 
     generated_at_utc = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    if translated_count == len(enriched) and not last_api_error:
+        upstream_status = "LIVE_OK"
+        radar_status = "LIVE"
+    elif translated_count > 0:
+        upstream_status = f"PARTIAL ({translated_count}/{len(enriched)})"
+        radar_status = "PARTIAL"
+    else:
+        upstream_status = last_api_error or "NO_OUTPUT"
+        radar_status = "API_ERROR"
+
     payload = {
         "project": "BAL TechRadar — Trạm Tình Báo Công Nghệ Bảo Anh Lâm",
-        "status": "PRODUCTION_LIVE",
+        "status": radar_status,
         "dry_run": False,
         "generated_at_utc": generated_at_utc,
         "languages": list(TARGET_LANGUAGES),
         "window": "24h_trending",
         "total_repos": len(enriched),
+        "translated_count": translated_count,
         "gemini_enabled": bool(gemini_api_key),
-        "gemini_model": GEMINI_MODEL,
-        "gemini_upstream_status": runtime_state["upstream_status"],
-        "gemini_live_calls": runtime_state["gemini_live_calls"],
+        "gemini_model": active_model,
+        "available_flash_models": available_flash_models,
+        "batch_size": BATCH_SIZE,
+        "gemini_live_calls": gemini_live_calls,
+        "gemini_upstream_status": upstream_status,
+        "gemini_error": last_api_error if translated_count < len(enriched) else None,
         "repositories": enriched,
     }
 
@@ -334,14 +460,23 @@ def run_tech_radar(total_limit=30):
     md_lines = [
         f"# BAL TechRadar — Bản tin Tình báo Công nghệ ({generated_at_utc})",
         f"- **Tổng số repo:** `{len(enriched)}` (`Python`, `TypeScript` — Trending 24h)",
-        f"- **Chế độ vận hành:** `PRODUCTION_LIVE` (`dry_run: false`, Model: `{GEMINI_MODEL}`)",
-        "",
+        f"- **Trạng thái Gemini AI:** `{radar_status}` | Model: `{active_model}` | Đã dịch: `{translated_count}/{len(enriched)}` | Requests: `{gemini_live_calls}`",
     ]
+    if payload["gemini_error"]:
+        md_lines.append(f"- **Lỗi API thực tế:** `{payload['gemini_error']}`")
+    md_lines.append("")
+
     for item in enriched:
         md_lines.append(
             f"### {item['rank']}. [{item['full_name']}]({item['url']}) — ⭐ {item['stars']:,} ({item['language']})"
         )
-        md_lines.append(f"- **Tóm tắt (<= 3 câu):** {item['summary_vi']}")
+        if item["summary_vi"]:
+            md_lines.append(f"- **Tóm tắt (<= 3 câu):** {item['summary_vi']}")
+            if item["fit_score"] is not None:
+                md_lines.append(f"- **BAL Fit:** {item['fit_score']}/100 ({item['sector']}) | {item['suggestion']}")
+        else:
+            md_lines.append(f"- **Description (gốc):** {item['description'] or 'Không có'}")
+            md_lines.append(f"- **Trạng thái API:** `{item['api_error'] or 'Chưa phân tích'}`")
         md_lines.append("")
 
     with open(OUTPUT_MD, "w", encoding="utf-8") as f:
@@ -351,16 +486,20 @@ def run_tech_radar(total_limit=30):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="BAL TechRadar — 24h GitHub Trending + Gemini Summarizer")
+    parser = argparse.ArgumentParser(description="BAL TechRadar — 24h GitHub Trending + Gemini Flash Batch Summarizer")
     parser.add_argument("--limit", type=int, default=30, help="Tong so repo can lay (mac dinh: 30)")
     args = parser.parse_args()
 
     result = run_tech_radar(total_limit=args.limit)
-    print(f"[BAL TechRadar] Hoan tat thu thap {result['total_repos']} repo | Gemini={result['gemini_enabled']}")
+    print(
+        f"[BAL TechRadar] Hoan tat: {result['translated_count']}/{result['total_repos']} repo da dich "
+        f"| Model={result['gemini_model']} | Calls={result['gemini_live_calls']} | Status={result['gemini_upstream_status']}"
+    )
     print(f"[BAL TechRadar] JSON: {OUTPUT_JSON}")
     print(f"[BAL TechRadar] Markdown: {OUTPUT_MD}")
     for item in result["repositories"][:5]:
-        print(f"  #{item['rank']} {item['full_name']} ({item['language']} | {item['stars']} stars) -> {item['summary_vi']}")
+        preview = item["summary_vi"] or item["api_error"] or item["description"]
+        print(f"  #{item['rank']} {item['full_name']} ({item['language']} | {item['stars']} stars) -> {preview}")
 
 
 if __name__ == "__main__":
